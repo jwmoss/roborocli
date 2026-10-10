@@ -1,0 +1,78 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_call:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref_type != 'tag' }}
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+          cache: false
+      - name: Check
+        if: runner.os != 'Windows'
+        run: make check
+      - name: Check on Windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $unformatted = gofmt -l (Get-ChildItem -Recurse -Filter *.go | Select-Object -ExpandProperty FullName)
+          if ($unformatted) { throw "Unformatted Go files: $unformatted" }
+          go mod tidy -diff
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          go vet ./...
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          go test -count=1 -timeout=2m ./...
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          go build ./...
+          exit $LASTEXITCODE
+      - name: Race check
+        if: runner.os == 'Linux'
+        run: go test -race -timeout=2m ./...
+
+  quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+          cache: false
+      - name: Audit workflows and dependencies
+        run: |
+          go run github.com/rhysd/actionlint/cmd/actionlint@v1.7.12
+          pipx run zizmor==1.30.1 --no-progress .github/workflows
+          go run golang.org/x/vuln/cmd/govulncheck@v1.8.0 ./...
+      - name: Read release version
+        id: release-version
+        run: echo "version=$(cat .goreleaser-version)" >> "$GITHUB_OUTPUT"
+      - uses: goreleaser/goreleaser-action@f06c13b6b1a9625abc9e6e439d9c05a8f2190e94 # v7.2.3
+        with:
+          distribution: goreleaser
+          version: ${{ steps.release-version.outputs.version }}
+          install-only: true
+      - name: Validate release configuration
+        run: goreleaser check || test "$?" -eq 2

@@ -1,0 +1,84 @@
+version: 2
+
+project_name: roborocli
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - id: roborocli
+    main: ./cmd/roborocli
+    binary: roborocli
+    env:
+      - CGO_ENABLED=0
+    flags:
+      - -trimpath
+    goos:
+      - darwin
+      - linux
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w
+      - -X github.com/jwmoss/roborocli/internal/cli.version={{ .Version }}
+      - -X github.com/jwmoss/roborocli/internal/cli.commit={{ .ShortCommit }}
+      - -X github.com/jwmoss/roborocli/internal/cli.date={{ .Date }}
+
+archives:
+  - id: roborocli
+    ids:
+      - roborocli
+    formats:
+      - tar.gz
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    format_overrides:
+      - goos: windows
+        formats:
+          - zip
+    files:
+      - LICENSE
+      - README.md
+      - CHANGELOG.md
+
+checksum:
+  name_template: checksums.txt
+
+snapshot:
+  version_template: "{{ incpatch .Version }}-next"
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^chore:"
+      - "Merge pull request"
+      - "Merge branch"
+
+release:
+  github:
+    owner: jwmoss
+    name: roborocli
+  prerelease: auto
+  name_template: "{{ .ProjectName }} v{{ .Version }}"
+
+brews:
+  - name: roborocli
+    ids:
+      - roborocli
+    repository:
+      owner: jwmoss
+      name: homebrew-tap
+      token: "{{ .Env.HOMEBREW_TAP_TOKEN }}"
+    directory: Formula
+    homepage: "https://github.com/jwmoss/roborocli"
+    description: "Command-line client for controlling Roborock robot vacuums"
+    license: MIT
+    install: |
+      bin.install "roborocli"
+    test: |
+      system "#{bin}/roborocli", "version"
