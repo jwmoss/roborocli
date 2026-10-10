@@ -6,6 +6,10 @@
 - Read the short `clean_*` keys in `info history`.
 - Accept the array form of `get_consumable` in `info consumables`.
 - Show `_times` consumable values as counts, not durations.
+- Cache the home payload in the config file. Device commands no longer call
+  the cloud on the local transport; `roborocli devices` refreshes the cache.
+- Use the gateway stored at login, and skip the rate-limited `getUrlByEmail`.
+- End each stderr diagnostic with a newline.
 
 ## 1.0.0
 

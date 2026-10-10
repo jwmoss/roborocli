@@ -55,15 +55,9 @@ func newDevicesCommand(rc *runtime) *cobra.Command {
 			if err := cfg.ValidateAuth(); err != nil {
 				return err
 			}
-			cloud := rc.cloudClient(cfg)
-			user := cfg.UserData
-			homeID, err := cloud.HomeID(cmd.Context(), *user)
+			home, err := rc.loadHome(cmd.Context(), cfg, true)
 			if err != nil {
-				return fmt.Errorf("fetch home id: %w", err)
-			}
-			home, err := cloud.HomeData(cmd.Context(), *user, homeID)
-			if err != nil {
-				return fmt.Errorf("fetch home data: %w", err)
+				return err
 			}
 			devices := home.AllDevices()
 			if rc.out.IsJSON() {
