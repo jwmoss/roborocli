@@ -141,13 +141,11 @@ func newStatusCommand(rc *runtime) *cobra.Command {
 				return callErr
 			}
 			if rc.out.IsJSON() {
-				var pretty any
-				json.Unmarshal(shadow, &pretty)
 				return rc.out.JSON(map[string]any{
 					"device":    session.Device.Name,
 					"duid":      session.Device.DUID,
 					"transport": "cloud-shadow",
-					"status":    pretty,
+					"status":    prettyOrRaw(shadow),
 					"warning":   callErr.Error(),
 				})
 			}
@@ -198,7 +196,7 @@ func (rc *runtime) renderShadow(raw json.RawMessage) error {
 }
 
 func (rc *runtime) renderStatus(result json.RawMessage, transport string) error {
-	status, err := statusObject(result)
+	status, err := firstObject(result)
 	if err != nil {
 		return err
 	}
@@ -228,7 +226,7 @@ func (rc *runtime) renderStatus(result json.RawMessage, transport string) error 
 		rows = append(rows, []string{"clean_time", formatSeconds(cleanTime)})
 	}
 	if cleanArea > 0 {
-		rows = append(rows, []string{"clean_area", fmt.Sprintf("%d cm2", cleanArea)})
+		rows = append(rows, []string{"clean_area", formatArea(cleanArea)})
 	}
 	if msg, ok := status["msg_status"].(map[string]any); ok && len(msg) > 0 {
 		rows = append(rows, []string{"msg_status", fmt.Sprintf("%v", msg)})
@@ -274,12 +272,7 @@ func newInfoCommand(rc *runtime) *cobra.Command {
 					"transport": caller.Transport(),
 				}
 				for method, res := range results {
-					var pretty any
-					if err := json.Unmarshal(res, &pretty); err == nil {
-						payload[method] = pretty
-					} else {
-						payload[method] = json.RawMessage(res)
-					}
+					payload[method] = prettyOrRaw(res)
 				}
 				if rc.out.IsJSON() || rc.out.IsPlain() {
 					return rc.out.JSON(payload)
@@ -334,20 +327,12 @@ func newConsumablesCommand(rc *runtime) *cobra.Command {
 				if err != nil {
 					return err
 				}
-				var consumable map[string]any
-				if err := json.Unmarshal(res, &consumable); err != nil {
-					return fmt.Errorf("decode consumables: %w", err)
-				}
 				if rc.out.IsJSON() || rc.out.IsPlain() {
-					return rc.out.JSON(consumable)
+					return rc.out.JSON(prettyOrRaw(res))
 				}
-				rows := make([][]string, 0, len(consumable))
-				for key, value := range consumable {
-					if secs := asInt(value); secs > 0 {
-						rows = append(rows, []string{key, formatSeconds(secs)})
-						continue
-					}
-					rows = append(rows, []string{key, fmt.Sprintf("%v", value)})
+				rows, err := consumableRows(res)
+				if err != nil {
+					return err
 				}
 				rc.out.Table([]string{"PART", "VALUE"}, rows)
 				return nil
@@ -414,15 +399,7 @@ func newNetworkCommand(rc *runtime) *cobra.Command {
 				if err := json.Unmarshal(res, &info); err != nil {
 					return fmt.Errorf("decode network info: %w", err)
 				}
-				if info.IP != "" && !rc.g.dryRun && rc.cfg.DeviceIPs != nil {
-					if rc.cfg.DeviceIPs[session.Device.DUID] != info.IP {
-						next := *rc.cfg
-						next.DeviceIPs[session.Device.DUID] = info.IP
-						if err := configSave(rc, next); err != nil {
-							rc.out.Errorf("cache device IP: %v", err)
-						}
-					}
-				}
+				rc.cacheDeviceIP(rc.cfg, session.Device.DUID, info.IP)
 				if rc.out.IsJSON() || rc.out.IsPlain() {
 					return rc.out.JSON(info)
 				}
@@ -452,21 +429,13 @@ func newHistoryCommand(rc *runtime) *cobra.Command {
 					return err
 				}
 				if rc.out.IsJSON() || rc.out.IsPlain() {
-					var pretty any
-					json.Unmarshal(res, &pretty)
-					return rc.out.JSON(pretty)
+					return rc.out.JSON(prettyOrRaw(res))
 				}
 				var summary map[string]any
 				if err := json.Unmarshal(res, &summary); err != nil {
 					return fmt.Errorf("decode clean summary: %w", err)
 				}
-				rows := [][]string{
-					{"total_clean_time", formatSeconds(asInt(summary["total_clean_time"]))},
-					{"total_clean_area", fmt.Sprintf("%v cm2", summary["total_clean_area"])},
-					{"total_clean_count", fmt.Sprintf("%v", summary["total_clean_count"])},
-					{"last_clean_t", formatSeconds(asInt(summary["last_clean_t"]))},
-				}
-				rc.out.Table([]string{"FIELD", "VALUE"}, rows)
+				rc.out.Table([]string{"FIELD", "VALUE"}, cleanSummaryRows(summary))
 				return nil
 			})
 		},
@@ -496,32 +465,20 @@ func newSettingsCommand(rc *runtime) *cobra.Command {
 					{"dock_info", roborock.CmdGetDockInfo},
 				}
 				payload := map[string]any{}
+				rows := make([][]string, 0, len(readers))
 				for _, reader := range readers {
 					res, err := caller.Call(ctx, reader.method, nil)
 					if err != nil {
 						continue
 					}
-					var pretty any
-					if err := json.Unmarshal(res, &pretty); err == nil {
-						payload[reader.name] = pretty
-					} else {
-						payload[reader.name] = json.RawMessage(res)
-					}
+					payload[reader.name] = prettyOrRaw(res)
+					rows = append(rows, []string{reader.name, compact(payload[reader.name])})
 				}
 				if len(payload) == 0 {
 					return fmt.Errorf("device returned no settings; firmware may not support them")
 				}
 				if rc.out.IsJSON() || rc.out.IsPlain() {
 					return rc.out.JSON(payload)
-				}
-				rows := make([][]string, 0, len(payload))
-				for _, name := range []string{"custom_mode", "sound_volume", "child_lock", "led_status",
-					"carpet_mode", "collision_avoid", "dnd_timer", "map_status", "dock_info"} {
-					value, ok := payload[name]
-					if !ok {
-						continue
-					}
-					rows = append(rows, []string{name, compact(value)})
 				}
 				rc.out.Table([]string{"SETTING", "VALUE"}, rows)
 				return nil
@@ -578,11 +535,9 @@ func (rc *runtime) runMutating(cmd *cobra.Command, method string, params any, su
 			return err
 		}
 		if rc.out.IsJSON() {
-			var pretty any
-			json.Unmarshal(res, &pretty)
 			return rc.out.JSON(map[string]any{
 				"method":    method,
-				"result":    pretty,
+				"result":    prettyOrRaw(res),
 				"transport": caller.Transport(),
 			})
 		}
@@ -628,11 +583,11 @@ func newGotoCommand(rc *runtime) *cobra.Command {
 			if err != nil {
 				return fmt.Errorf("%w: y %q is not a number", errUsage, args[1])
 			}
+			params := []any{x, y}
 			if repeat > 1 {
-				return rc.runMutating(cmd, roborock.CmdAppGotoTarget,
-					[]any{x, y, repeat}, "goto sent")
+				params = append(params, repeat)
 			}
-			return rc.runMutating(cmd, roborock.CmdAppGotoTarget, []any{x, y}, "goto sent")
+			return rc.runMutating(cmd, roborock.CmdAppGotoTarget, params, "goto sent")
 		},
 	}
 	cmd.Flags().IntVar(&repeat, "repeat", 1, "repeat count")
@@ -652,9 +607,6 @@ func newFanCommand(rc *runtime) *cobra.Command {
 			if err != nil {
 				return fmt.Errorf("%w: fan speed %q is not a number", errUsage, args[0])
 			}
-			if rc.g.dryRun {
-				return fmt.Errorf("dry-run: refusing to set fan speed")
-			}
 			return rc.runMutating(cmd, roborock.CmdSetCustomMode, []any{speed}, "fan speed set")
 		},
 	}
@@ -672,9 +624,6 @@ func newWaterCommand(rc *runtime) *cobra.Command {
 			mode, err := strconv.Atoi(args[0])
 			if err != nil {
 				return fmt.Errorf("%w: water mode %q is not a number", errUsage, args[0])
-			}
-			if rc.g.dryRun {
-				return fmt.Errorf("dry-run: refusing to set water mode")
 			}
 			return rc.runMutating(cmd, roborock.CmdSetWaterBoxCustomMode, []any{mode}, "water mode set")
 		},
@@ -694,9 +643,6 @@ func newVolumeCommand(rc *runtime) *cobra.Command {
 			if err != nil || value < 0 || value > 100 {
 				return fmt.Errorf("%w: volume %q must be 0-100", errUsage, args[0])
 			}
-			if rc.g.dryRun {
-				return fmt.Errorf("dry-run: refusing to set volume")
-			}
 			return rc.runMutating(cmd, roborock.CmdSetSoundVolume, []any{value}, "volume set")
 		},
 	}
@@ -711,12 +657,7 @@ func newDndCommand(rc *runtime) *cobra.Command {
 			switch {
 			case len(args) == 0:
 				return rc.showSetting(cmd, roborock.CmdGetDndTimer)
-			case args[0] == "off":
-				if rc.g.dryRun {
-					return fmt.Errorf("dry-run: refusing to close the DND timer")
-				}
-				return rc.runMutating(cmd, roborock.CmdCloseDndTimer, nil, "DND timer closed")
-			case len(args) == 3:
+			case len(args) == 3 && args[0] == "set":
 				start, err := parseHour(args[1])
 				if err != nil {
 					return err
@@ -724,9 +665,6 @@ func newDndCommand(rc *runtime) *cobra.Command {
 				end, err := parseHour(args[2])
 				if err != nil {
 					return err
-				}
-				if rc.g.dryRun {
-					return fmt.Errorf("dry-run: refusing to set the DND timer")
 				}
 				return rc.runMutating(cmd, roborock.CmdSetDndTimer,
 					[]any{start, end}, "DND timer set")
@@ -740,9 +678,6 @@ func newDndCommand(rc *runtime) *cobra.Command {
 		Short: "Turn the do-not-disturb timer off",
 		Args:  usageArgs(cobra.NoArgs),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if rc.g.dryRun {
-				return fmt.Errorf("dry-run: refusing to close the DND timer")
-			}
 			return rc.runMutating(cmd, roborock.CmdCloseDndTimer, nil, "DND timer closed")
 		},
 	})
@@ -779,9 +714,6 @@ func newResetConsumableCommand(rc *runtime) *cobra.Command {
 			if !allowed[args[0]] {
 				return fmt.Errorf("%w: unknown part %q", errUsage, args[0])
 			}
-			if rc.g.dryRun {
-				return fmt.Errorf("dry-run: refusing to reset %s", args[0])
-			}
 			return rc.runMutating(cmd, roborock.CmdResetConsumable,
 				[]any{args[0]}, args[0]+" counter reset")
 		},
@@ -796,14 +728,53 @@ func (rc *runtime) showSetting(cmd *cobra.Command, method string) error {
 			return err
 		}
 		if rc.out.IsJSON() || rc.out.IsPlain() {
-			var pretty any
-			json.Unmarshal(res, &pretty)
-			return rc.out.JSON(pretty)
+			return rc.out.JSON(prettyOrRaw(res))
 		}
 		rc.out.Printf("%s\n", compact(prettyOrRaw(res)))
 		return nil
 	})
 }
+
+// consumableRows renders get_consumable as part/value rows.
+func consumableRows(raw json.RawMessage) ([][]string, error) {
+	consumable, err := firstObject(raw)
+	if err != nil {
+		return nil, fmt.Errorf("decode consumables: %w", err)
+	}
+	rows := make([][]string, 0, len(consumable))
+	for key, value := range consumable {
+		// Keys ending in _times are counts, not seconds.
+		if secs := asInt(value); secs > 0 && !strings.HasSuffix(key, "_times") {
+			rows = append(rows, []string{key, formatSeconds(secs)})
+			continue
+		}
+		rows = append(rows, []string{key, fmt.Sprintf("%v", value)})
+	}
+	return rows, nil
+}
+
+// cleanSummaryRows renders get_clean_summary as field/value rows. Firmware
+// uses either the total_ keys or the short keys.
+func cleanSummaryRows(summary map[string]any) [][]string {
+	pick := func(key string) int {
+		if value, ok := summary["total_"+key]; ok {
+			return asInt(value)
+		}
+		return asInt(summary[key])
+	}
+	rows := [][]string{
+		{"total_clean_time", formatSeconds(pick("clean_time"))},
+		{"total_clean_area", formatArea(pick("clean_area"))},
+		{"total_clean_count", strconv.Itoa(pick("clean_count"))},
+	}
+	if last := asInt(summary["last_clean_t"]); last > 0 {
+		rows = append(rows, []string{"last_clean", time.Unix(int64(last), 0).Format(time.DateTime)})
+	}
+	return rows
+}
+
+// formatArea renders a firmware area, reported in mm2, as square meters.
+func formatArea(mm2 int) string { return fmt.Sprintf("%.1f m2", float64(mm2)/1e6) }
 
 // prettyOrRaw unmarshals JSON when possible and falls back to raw bytes.
 func prettyOrRaw(raw json.RawMessage) any {
@@ -814,9 +785,9 @@ func prettyOrRaw(raw json.RawMessage) any {
 	return pretty
 }
 
-// statusObject accepts the object form and the one-element array form
-// returned by get_status.
-func statusObject(raw json.RawMessage) (map[string]any, error) {
+// firstObject accepts the object form and the one-element array form that
+// firmware returns for get_status and get_consumable.
+func firstObject(raw json.RawMessage) (map[string]any, error) {
 	var status map[string]any
 	if err := json.Unmarshal(raw, &status); err == nil {
 		return status, nil
