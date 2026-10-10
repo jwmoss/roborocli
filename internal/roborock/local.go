@@ -74,7 +74,7 @@ func (c *LocalClient) Connect(ctx context.Context) error {
 		c.version = VersionV1
 	}
 	_ = c.conn.SetDeadline(time.Time{})
-	go c.readLoop()
+	go c.readLoop(c.conn)
 	return nil
 }
 
@@ -171,13 +171,14 @@ func (c *LocalClient) hello(ctx context.Context, version string) error {
 	}
 }
 
-// readLoop decodes incoming frames and routes RPC responses.
-func (c *LocalClient) readLoop() {
+// readLoop decodes incoming frames and routes RPC responses. It takes conn
+// as an argument because Close sets c.conn to nil while the loop runs.
+func (c *LocalClient) readLoop(conn net.Conn) {
 	defer close(c.done)
 	decoder := NewLocalDecoder(c.LocalKey, c.connNonce, c.ackNonce)
 	buf := make([]byte, 8192)
 	for {
-		n, err := c.conn.Read(buf)
+		n, err := conn.Read(buf)
 		if n > 0 {
 			decoder.Feed(buf[:n])
 			for {

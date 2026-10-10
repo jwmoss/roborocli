@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 1.0.1
+
 - Show clean area in square meters. Firmware reports mm2, not cm2.
 - Read the short `clean_*` keys in `info history`.
 - Accept the array form of `get_consumable` in `info consumables`.
@@ -10,6 +12,7 @@
   the cloud on the local transport; `roborocli devices` refreshes the cache.
 - Use the gateway stored at login, and skip the rate-limited `getUrlByEmail`.
 - End each stderr diagnostic with a newline.
+- Fix a data race between `LocalClient.Close` and the read loop.
 
 ## 1.0.0
 
