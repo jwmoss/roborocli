@@ -38,6 +38,9 @@ type Config struct {
 	DefaultHost string `yaml:"default_host,omitempty"`
 	// DeviceIPs caches the last known local IP per device duid.
 	DeviceIPs map[string]string `yaml:"device_ips,omitempty"`
+	// HomeData caches the home payload so device commands skip the cloud.
+	// It holds device local keys; run roborocli devices to refresh it.
+	HomeData *roborock.HomeData `yaml:"home_data,omitempty"`
 }
 
 // Default returns the base configuration.

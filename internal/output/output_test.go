@@ -35,3 +35,11 @@ func TestTermDumbDisablesColor(t *testing.T) {
 		t.Fatalf("stdout contains color escape: %q", stdout.String())
 	}
 }
+
+func TestErrorfEndsLine(t *testing.T) {
+	var stderr bytes.Buffer
+	New(&bytes.Buffer{}, &stderr, false, false, false, true).Errorf("a %d", 1)
+	if stderr.String() != "a 1\n" {
+		t.Fatalf("stderr = %q", stderr.String())
+	}
+}

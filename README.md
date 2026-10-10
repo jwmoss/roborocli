@@ -60,6 +60,12 @@ roborocli --device <duid> status  # select explicitly
 Set `default_duid` in the config file to avoid passing `--device`.
 Set `default_host` to the vacuum IP to avoid passing `--host`.
 
+The CLI caches the device list, with each device's local key, in the
+config file. Device commands read the cache, so they make no cloud calls on
+the local transport. The Roborock cloud rate limits its API. Run
+`roborocli devices` to refresh the cache after you add, rename, or re-pair a
+vacuum.
+
 ## Transport
 
 The CLI prefers the local TCP connection on port `58867` and falls back to

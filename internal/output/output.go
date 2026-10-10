@@ -58,7 +58,7 @@ func (f *Formatter) Println(args ...any) {
 }
 
 func (f *Formatter) Errorf(format string, args ...any) {
-	_, _ = fmt.Fprintf(f.stderr, format, args...)
+	_, _ = fmt.Fprintf(f.stderr, format+"\n", args...)
 }
 
 func (f *Formatter) Table(headers []string, rows [][]string) {

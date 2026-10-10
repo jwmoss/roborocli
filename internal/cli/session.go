@@ -22,8 +22,6 @@ type Caller interface {
 type deviceSession struct {
 	Cloud   *roborock.CloudClient
 	User    *roborock.UserData
-	Home    *roborock.HomeData
-	HomeID  int64
 	Device  roborock.Device
 	Product roborock.Product
 }
@@ -72,28 +70,52 @@ func (rc *runtime) openSession(ctx context.Context) (*deviceSession, error) {
 	}
 	rc.cfg = cfg
 
-	cloud := rc.cloudClient(cfg)
-	user := cfg.UserData
-	homeID, err := cloud.HomeID(ctx, *user)
+	cached := cfg.HomeData != nil
+	home, err := rc.loadHome(ctx, cfg, false)
 	if err != nil {
-		return nil, fmt.Errorf("fetch home id: %w", err)
-	}
-	home, err := cloud.HomeData(ctx, *user, homeID)
-	if err != nil {
-		return nil, fmt.Errorf("fetch home data: %w", err)
+		return nil, err
 	}
 	device, err := selectDevice(home, rc.g.device, cfg.DefaultDUID)
+	if err != nil && cached {
+		// The device may be new or renamed since the cache was written.
+		if home, err = rc.loadHome(ctx, cfg, true); err != nil {
+			return nil, err
+		}
+		device, err = selectDevice(home, rc.g.device, cfg.DefaultDUID)
+	}
 	if err != nil {
 		return nil, err
 	}
 	return &deviceSession{
-		Cloud:   cloud,
-		User:    user,
-		Home:    home,
-		HomeID:  homeID,
+		Cloud:   rc.cloudClient(cfg),
+		User:    cfg.UserData,
 		Device:  device,
 		Product: home.ProductFor(device),
 	}, nil
+}
+
+// loadHome returns the cached home payload. With refresh, or with no cache,
+// it fetches the payload from the cloud and caches it.
+func (rc *runtime) loadHome(ctx context.Context, cfg *config.Config, refresh bool) (*roborock.HomeData, error) {
+	if cfg.HomeData != nil && !refresh {
+		return cfg.HomeData, nil
+	}
+	cloud := rc.cloudClient(cfg)
+	homeID, err := cloud.HomeID(ctx, *cfg.UserData)
+	if err != nil {
+		return nil, fmt.Errorf("fetch home id: %w", err)
+	}
+	home, err := cloud.HomeData(ctx, *cfg.UserData, homeID)
+	if err != nil {
+		return nil, fmt.Errorf("fetch home data: %w", err)
+	}
+	cfg.HomeData = home
+	if !rc.g.dryRun {
+		if err := config.Save(rc.configPath(), *cfg, true); err != nil {
+			rc.out.Errorf("cache home data: %v", err)
+		}
+	}
+	return home, nil
 }
 
 // selectDevice resolves the device by explicit flag, config default, or by

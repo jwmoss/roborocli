@@ -688,16 +688,21 @@ func (c *CloudClient) RawRequest(ctx context.Context, user UserData, method, pat
 
 // HomeID fetches the account home identifier used by the rriot API.
 func (c *CloudClient) HomeID(ctx context.Context, user UserData) (int64, error) {
-	base, err := c.BaseURL(ctx)
-	if err != nil {
-		return 0, err
+	// Use the gateway stored at login: getUrlByEmail is rate limited, and
+	// only login needs the country it returns.
+	base := c.preferredBase
+	if base == "" {
+		var err error
+		if base, err = c.BaseURL(ctx); err != nil {
+			return 0, err
+		}
 	}
 	headers := map[string]string{"header_clientid": c.headerClientID()}
 	if user.Token != "" {
 		headers["Authorization"] = user.Token
 	}
 	var env envelope
-	err = c.doJSON(ctx, base, http.MethodGet, "/api/v1/getHomeDetail", nil, nil, headers, &env)
+	err := c.doJSON(ctx, base, http.MethodGet, "/api/v1/getHomeDetail", nil, nil, headers, &env)
 	if err != nil {
 		return 0, err
 	}

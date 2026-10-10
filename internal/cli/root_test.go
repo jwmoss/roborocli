@@ -158,6 +158,45 @@ func TestDevicesListsAccountDevices(t *testing.T) {
 	}
 }
 
+func TestDeviceCommandsUseCachedHomeData(t *testing.T) {
+	var cloudCalls []string
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		cloudCalls = append(cloudCalls, r.URL.Path)
+		switch {
+		case strings.Contains(r.URL.Path, "getHomeDetail"):
+			_, _ = w.Write([]byte(`{"code":200,"data":{"rrHomeId":42}}`))
+		case strings.Contains(r.URL.Path, "/user/homes/42"):
+			_, _ = w.Write([]byte(`{"success":true,"result":{"id":42,"products":[{"id":"p1"}],
+				"devices":[{"duid":"dev-1","name":"Vac","local_key":"local_key_16chr","product_id":"p1","pv":"1.0"}]}}`))
+		default:
+			_, _ = w.Write([]byte(`{"code":404,"msg":"not found"}`))
+		}
+	}))
+	defer server.Close()
+
+	path := writeConfig(t, server.URL)
+	run := func(args ...string) {
+		var stdout, stderr bytes.Buffer
+		Execute(context.Background(), append([]string{"--config", path}, args...),
+			strings.NewReader(""), &stdout, &stderr)
+	}
+	run("devices")
+	fetched := len(cloudCalls)
+	if fetched == 0 {
+		t.Fatal("devices made no cloud calls")
+	}
+	// The closed local port fails fast after the session opens.
+	run("--host", "127.0.0.1", "--timeout", "1s", "info", "rooms")
+	if len(cloudCalls) != fetched {
+		t.Fatalf("cached session called the cloud: %v", cloudCalls[fetched:])
+	}
+	for _, call := range cloudCalls {
+		if strings.Contains(call, "getUrlByEmail") {
+			t.Fatalf("device commands must not call getUrlByEmail: %v", cloudCalls)
+		}
+	}
+}
+
 func TestCommandRefusesMutatingMethodUnderDryRun(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "config.yaml")
 	if err := os.WriteFile(path, []byte("username: user@example.com\n"), 0600); err != nil {
