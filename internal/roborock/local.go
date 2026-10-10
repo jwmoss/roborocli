@@ -2,6 +2,7 @@ package roborock
 
 import (
 	"context"
+	"encoding/binary"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -56,30 +57,66 @@ func (c *LocalClient) Connect(ctx context.Context) error {
 	}
 	c.conn = conn
 
-	// Negotiate protocol. Try "1.0" then "L01"; a failed hello shows up as a
-	// timeout because the device stays silent on an unknown version.
-	versions := []string{VersionV1, VersionL01}
-	if c.version != "" {
-		versions = []string{c.version}
-	}
-	var lastErr error
-	connected := false
-	for _, version := range versions {
-		if err := c.hello(ctx, version); err != nil {
-			lastErr = err
-			continue
-		}
-		c.version = version
-		connected = true
-		break
-	}
-	if !connected {
+	// Newer firmware answers an L01 socket CONNECT on port 58867 even when the
+	// cloud reports protocol 1.0. Older firmware answers the classic hello.
+	if err := c.socketConnect(ctx); err != nil {
 		conn.Close()
-		c.conn = nil
-		return fmt.Errorf("hello: %w", lastErr)
+		conn, err = net.DialTimeout("tcp", net.JoinHostPort(c.Host, itoa(orInt(c.Port, LocalPort))), c.Timeout)
+		if err != nil {
+			return fmt.Errorf("connect to %s: %w", c.Host, err)
+		}
+		c.conn = conn
+		if err := c.hello(ctx, VersionV1); err != nil {
+			conn.Close()
+			c.conn = nil
+			return fmt.Errorf("local handshake: %w", err)
+		}
+		c.version = VersionV1
 	}
-
+	_ = c.conn.SetDeadline(time.Time{})
 	go c.readLoop()
+	return nil
+}
+
+// socketConnect sends the L01 CONNECT frame used by the current app and
+// stores the acknowledged nonce for later payload encryption.
+func (c *LocalClient) socketConnect(ctx context.Context) error {
+	c.connNonce = uint32(RandomInt(1000, 1001000))
+	body := make([]byte, 0, 21)
+	body = append(body, VersionL01...)
+	body = binary.BigEndian.AppendUint32(body, 0)
+	body = binary.BigEndian.AppendUint32(body, c.connNonce)
+	body = binary.BigEndian.AppendUint32(body, 0)
+	body = binary.BigEndian.AppendUint16(body, 0) // CONNECT
+	body = binary.BigEndian.AppendUint32(body, 10)
+	frame := binary.BigEndian.AppendUint32(nil, uint32(len(body)))
+	frame = append(frame, body...)
+
+	deadline := time.Now().Add(3 * time.Second)
+	if dl, ok := ctx.Deadline(); ok && dl.Before(deadline) {
+		deadline = dl
+	}
+	_ = c.conn.SetDeadline(deadline)
+	if _, err := c.conn.Write(frame); err != nil {
+		return err
+	}
+	head := make([]byte, 4)
+	if _, err := io.ReadFull(c.conn, head); err != nil {
+		return err
+	}
+	n := int(binary.BigEndian.Uint32(head))
+	if n < 17 || n > 256 {
+		return fmt.Errorf("unexpected connect response length %d", n)
+	}
+	ack := make([]byte, n)
+	if _, err := io.ReadFull(c.conn, ack); err != nil {
+		return err
+	}
+	if string(ack[:3]) != VersionL01 || binary.BigEndian.Uint16(ack[15:17]) != 1 {
+		return fmt.Errorf("device did not accept L01 connect")
+	}
+	c.ackNonce = binary.BigEndian.Uint32(ack[7:11])
+	c.version = VersionL01
 	return nil
 }
 

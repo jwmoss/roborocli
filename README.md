@@ -58,6 +58,7 @@ roborocli --device <duid> status  # select explicitly
 ```
 
 Set `default_duid` in the config file to avoid passing `--device`.
+Set `default_host` to the vacuum IP to avoid passing `--host`.
 
 ## Transport
 
@@ -164,6 +165,7 @@ user_data:      # written by roborocli login
       a: https://api-us.roborock.com
       m: ssl://mqtt-roborock.com:8883
 default_duid: abc123
+default_host: 192.168.1.50
 device_ips:
   abc123: 192.168.1.50
 ```
@@ -175,7 +177,7 @@ Environment overrides:
 | `ROBOROCLI_EMAIL` | account email |
 | `ROBOROCLI_BASE_URL` | login gateway override |
 | `ROBOROCLI_DUID` | default device |
-| `ROBOROCLI_HOST` | device IP for the default duid |
+| `ROBOROCLI_HOST` | vacuum IP used when `--host` is omitted |
 
 ## Development
 

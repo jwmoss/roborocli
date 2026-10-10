@@ -32,10 +32,16 @@ func newFakeVacuum(t *testing.T, key string, replies map[string]any) *fakeVacuum
 }
 
 func (v *fakeVacuum) serve(ln net.Listener) {
-	conn, err := ln.Accept()
-	if err != nil {
-		return
+	for {
+		conn, err := ln.Accept()
+		if err != nil {
+			return
+		}
+		go v.serveConn(conn)
 	}
+}
+
+func (v *fakeVacuum) serveConn(conn net.Conn) {
 	defer conn.Close()
 	decoder := NewLocalDecoder(v.key, 0, 0)
 	buf := make([]byte, 8192)

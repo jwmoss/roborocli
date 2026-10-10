@@ -146,16 +146,19 @@ func (rc *runtime) deviceHost(cfg *config.Config, duid string) string {
 	if rc.g.host != "" {
 		return rc.g.host
 	}
-	if cfg.DeviceIPs != nil {
+	if cfg.DeviceIPs != nil && cfg.DeviceIPs[duid] != "" {
 		return cfg.DeviceIPs[duid]
 	}
-	return ""
+	return cfg.DefaultHost
 }
 
-// resolveLocalIP asks the cloud (over MQTT) for the device's local IP and
-// caches it in the config.
+// resolveLocalIP finds the vacuum on the LAN, then asks the cloud if needed.
 func (rc *runtime) resolveLocalIP(ctx context.Context, cfg *config.Config, session *deviceSession) (string, error) {
 	if ip := rc.deviceHost(cfg, session.Device.DUID); ip != "" {
+		return ip, nil
+	}
+	if ip, err := discoverIP(session.Device.DUID, 4*time.Second); err == nil && ip != "" {
+		rc.cacheDeviceIP(cfg, session.Device.DUID, ip)
 		return ip, nil
 	}
 	if session.Device.LocalKey == "" {
@@ -179,17 +182,43 @@ func (rc *runtime) resolveLocalIP(ctx context.Context, cfg *config.Config, sessi
 	if info.IP == "" {
 		return "", fmt.Errorf("device reported no local IP")
 	}
-	if !rc.g.dryRun && info.IP != "0.0.0.0" {
-		next := *cfg
-		if next.DeviceIPs == nil {
-			next.DeviceIPs = map[string]string{}
-		}
-		next.DeviceIPs[session.Device.DUID] = info.IP
-		if err := config.Save(rc.configPath(), next, true); err != nil {
-			rc.out.Errorf("cache device IP: %v", err)
-		}
+	if info.IP != "" && info.IP != "0.0.0.0" {
+		rc.cacheDeviceIP(cfg, session.Device.DUID, info.IP)
 	}
 	return info.IP, nil
+}
+
+func discoverIP(duid string, timeout time.Duration) (string, error) {
+	found, err := roborock.Discover(timeout)
+	if err != nil {
+		return "", err
+	}
+	for _, device := range found {
+		if device.DUID == duid || duid == "" {
+			return device.IP, nil
+		}
+	}
+	if len(found) == 1 && duid == "" {
+		return found[0].IP, nil
+	}
+	return "", fmt.Errorf("vacuum did not announce itself on the local network")
+}
+
+func (rc *runtime) cacheDeviceIP(cfg *config.Config, duid, ip string) {
+	if rc.g.dryRun || ip == "" {
+		return
+	}
+	next := *cfg
+	if next.DeviceIPs == nil {
+		next.DeviceIPs = map[string]string{}
+	}
+	if next.DeviceIPs[duid] == ip {
+		return
+	}
+	next.DeviceIPs[duid] = ip
+	if err := config.Save(rc.configPath(), next, true); err != nil {
+		rc.out.Errorf("cache device IP: %v", err)
+	}
 }
 
 // openCaller builds the transport for a device. It prefers the local TCP
@@ -221,6 +250,7 @@ func (rc *runtime) openCaller(ctx context.Context, session *deviceSession) (Call
 				}
 				rc.out.Errorf("local connect failed (%v); falling back to MQTT", err)
 			} else {
+				rc.cacheDeviceIP(cfg, session.Device.DUID, host)
 				return &localCaller{client: local}, nil
 			}
 		}

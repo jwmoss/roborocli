@@ -9,6 +9,17 @@ import (
 	"github.com/jwmoss/roborocli/internal/roborock"
 )
 
+func TestHostEnvSetsDefaultHost(t *testing.T) {
+	t.Setenv(EnvPrefix+"_HOST", "192.168.2.54")
+	cfg, err := Load(filepath.Join(t.TempDir(), "absent.yaml"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if cfg.DefaultHost != "192.168.2.54" {
+		t.Fatalf("DefaultHost = %q", cfg.DefaultHost)
+	}
+}
+
 func TestLoadEnvOverridesFile(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "config.yaml")

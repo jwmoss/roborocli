@@ -15,6 +15,7 @@ import (
 	"math/big"
 	"net/http"
 	"net/url"
+	"os"
 	"sort"
 	"strconv"
 	"strings"
@@ -44,9 +45,10 @@ type CloudClient struct {
 	Trace    func(method, path string, status int, duration time.Duration)
 
 	// discovered during login
-	baseURL     string
-	country     string
-	countryCode string
+	baseURL       string
+	preferredBase string
+	country       string
+	countryCode   string
 }
 
 // NewCloudClient builds a client. clientID is a stable random 16-character
@@ -100,10 +102,13 @@ func effectivePort(u *url.URL) string {
 	return "80"
 }
 
-// SetBaseURL seeds the login gateway, skipping region discovery. An empty
-// value restores discovery.
+// SetBaseURL sets the login gateway. Country still comes from getUrlByEmail
+// so a configured gateway does not invent a region.
 func (c *CloudClient) SetBaseURL(baseURL string) {
-	c.baseURL = strings.TrimRight(strings.TrimSpace(baseURL), "/")
+	c.preferredBase = strings.TrimRight(strings.TrimSpace(baseURL), "/")
+	c.baseURL = ""
+	c.country = ""
+	c.countryCode = ""
 }
 
 // headerClientID derives base64(md5(username + installID)), as the app does.
@@ -179,14 +184,24 @@ func HawkAuthorization(rriot RRiot, path string, query url.Values, payloadMD5 st
 	if strings.Trim(path, "/") == "" {
 		canonicalPath = "/"
 	}
+	// An empty query or payload slot stays empty. md5("") is not the same
+	// value, and the server rejects that signature.
+	querySlot := ""
+	if sorted := sortedKV(query); sorted != "" {
+		querySlot = hexMD5([]byte(sorted))
+	}
+	pathSlot := ""
+	if canonicalPath != "/" || strings.Trim(path, "/") != "" {
+		pathSlot = hexMD5([]byte(canonicalPath))
+	}
 
 	prestr := strings.Join([]string{
 		rriot.U,
 		rriot.S,
 		nonce,
 		ts,
-		hexMD5([]byte(canonicalPath)),
-		hexMD5([]byte(sortedKV(query))),
+		pathSlot,
+		querySlot,
 		payloadMD5,
 	}, ":")
 	mac := hmac.New(sha256.New, []byte(rriot.H))
@@ -250,13 +265,24 @@ type envelope struct {
 	Data json.RawMessage `json:"data"`
 }
 
-// BaseURL discovers the login gateway for the account region.
+// BaseURL discovers the login gateway for the account region. It always
+// calls getUrlByEmail, because the response carries the country and the
+// account's regional gateway that later calls must use.
 func (c *CloudClient) BaseURL(ctx context.Context) (string, error) {
 	if c.baseURL != "" {
 		return c.baseURL, nil
 	}
+	candidates := LoginBaseURLs
+	if c.preferredBase != "" {
+		candidates = []string{c.preferredBase}
+		// Fall back to the regional gateways only when the caller opts in,
+		// so tests and offline use never reach the live service.
+		if os.Getenv("ROBOROCLI_DISCOVER_REGIONS") == "1" {
+			candidates = append(candidates, LoginBaseURLs...)
+		}
+	}
 	var lastErr error
-	for _, base := range LoginBaseURLs {
+	for _, base := range candidates {
 		var env envelope
 		q := url.Values{"email": {c.Username}, "needtwostepauth": {"false"}}
 		err := c.doJSON(ctx, base, http.MethodPost, "/api/v1/getUrlByEmail", q, nil, nil, &env)
@@ -266,6 +292,9 @@ func (c *CloudClient) BaseURL(ctx context.Context) (string, error) {
 		}
 		if env.Code != 200 {
 			lastErr = fmt.Errorf("getUrlByEmail code %d: %s", env.Code, env.Msg)
+			if os.Getenv("ROBOROCLI_DEBUG_LOGIN") == "1" {
+				fmt.Fprintf(os.Stderr, "debug: getUrlByEmail %s -> code %d msg %q\n", base, env.Code, env.Msg)
+			}
 			continue
 		}
 		var data struct {
@@ -277,7 +306,19 @@ func (c *CloudClient) BaseURL(ctx context.Context) (string, error) {
 			lastErr = err
 			continue
 		}
-		c.baseURL, c.country, c.countryCode = data.URL, data.Country, data.CountryCode
+		// A gateway that does not know the account returns an empty country.
+		// Keep trying the other regional gateways in that case.
+		if data.Country == "" && data.CountryCode == "" {
+			lastErr = fmt.Errorf("gateway %s did not resolve an account region", base)
+			continue
+		}
+		// Prefer the gateway the server reports for this account.
+		c.baseURL = data.URL
+		if c.baseURL == "" {
+			c.baseURL = base
+		}
+		c.country = data.Country
+		c.countryCode = data.CountryCode
 		return c.baseURL, nil
 	}
 	if lastErr == nil {

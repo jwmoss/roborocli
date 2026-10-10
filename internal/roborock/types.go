@@ -1,6 +1,10 @@
 package roborock
 
-import "encoding/base64"
+import (
+	"crypto/md5"
+	"encoding/base64"
+	"encoding/json"
+)
 
 // Reference holds the Roborock cloud endpoints for one account region.
 type Reference struct {
@@ -52,14 +56,11 @@ func (r RRiot) BrokerPassword() string {
 	return sum[16:]
 }
 
-// SecurityEndpoint returns base64(md5(k)[8:14]). The cloud requires it in
-// the security envelope of every RPC request.
+// SecurityEndpoint returns base64(md5(k)[8:14]). The slice is raw digest
+// bytes, not the hex string. The cloud requires it in every MQTT RPC request.
 func (r RRiot) SecurityEndpoint() string {
-	sum := MD5Hex(r.K)
-	if len(sum) < 14 {
-		return ""
-	}
-	return base64.StdEncoding.EncodeToString([]byte(sum[8:14]))
+	sum := md5.Sum([]byte(r.K))
+	return base64.StdEncoding.EncodeToString(sum[8:14])
 }
 
 // Product describes one Roborock product type.
@@ -69,24 +70,53 @@ type Product struct {
 	Model      string `json:"model,omitempty"`
 	Category   string `json:"category,omitempty"`
 	Code       string `json:"code,omitempty"`
-	IconURL    string `json:"icon_url,omitempty"`
+	IconURL    string `json:"iconUrl,omitempty"`
 	Capability int64  `json:"capability,omitempty"`
 }
 
+// UnmarshalJSON accepts the live camelCase home payload and the snake_case
+// form used by older clients.
+func (d *Device) UnmarshalJSON(data []byte) error {
+	type alias Device
+	var decoded alias
+	if err := json.Unmarshal(data, &decoded); err != nil {
+		return err
+	}
+	*d = Device(decoded)
+	var extra map[string]json.RawMessage
+	if err := json.Unmarshal(data, &extra); err != nil {
+		return err
+	}
+	if d.LocalKey == "" {
+		_ = json.Unmarshal(extra["local_key"], &d.LocalKey)
+	}
+	if d.ProductID == "" {
+		_ = json.Unmarshal(extra["product_id"], &d.ProductID)
+	}
+	if d.TimeZone == "" {
+		_ = json.Unmarshal(extra["time_zone_id"], &d.TimeZone)
+	}
+	if d.FeatureSet == "" {
+		_ = json.Unmarshal(extra["feature_set"], &d.FeatureSet)
+	}
+	return nil
+}
+
 // Device is one vacuum (or other device) in the account home.
+// The live home API uses camelCase field names.
 type Device struct {
 	DUID       string `json:"duid"`
 	Name       string `json:"name,omitempty"`
-	LocalKey   string `json:"local_key,omitempty"`
-	ProductID  string `json:"product_id,omitempty"`
+	LocalKey   string `json:"localKey,omitempty"`
+	ProductID  string `json:"productId,omitempty"`
 	FV         string `json:"fv,omitempty"` // firmware version
 	PV         string `json:"pv,omitempty"` // protocol version (1.0, A01, B01, L01)
 	SN         string `json:"sn,omitempty"` // serial number
 	Online     *bool  `json:"online,omitempty"`
-	IconURL    string `json:"icon_url,omitempty"`
-	TimeZone   string `json:"time_zone_id,omitempty"`
-	FeatureSet string `json:"feature_set,omitempty"`
-	SilentOTA  *bool  `json:"silent_ota_switch,omitempty"`
+	IconURL    string `json:"iconUrl,omitempty"`
+	TimeZone   string `json:"timeZoneId,omitempty"`
+	FeatureSet string `json:"featureSet,omitempty"`
+	SilentOTA  *bool  `json:"silentOtaSwitch,omitempty"`
 }
 
 // Room is one room from the home map.
@@ -103,7 +133,7 @@ type HomeData struct {
 	Devices  []Device  `json:"devices,omitempty"`
 	Received []Device  `json:"receivedDevices,omitempty"`
 	Rooms    []Room    `json:"rooms,omitempty"`
-	GeoName  string    `json:"geo_name,omitempty"`
+	GeoName  string    `json:"geoName,omitempty"`
 }
 
 // AllDevices returns owned and shared devices.

@@ -54,6 +54,9 @@ func newLoginCommand(rc *runtime) *cobra.Command {
 				return err
 			}
 			country, countryCode := cloud.Country(cmd.Context())
+			if os.Getenv("ROBOROCLI_DEBUG_LOGIN") == "1" {
+				fmt.Fprintf(os.Stderr, "debug: base=%s country=%q countryCode=%q\n", base, country, countryCode)
+			}
 
 			if sendOnly || code == "" {
 				if err := cloud.SendEmailCode(cmd.Context()); err != nil {
