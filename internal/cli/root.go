@@ -134,6 +134,7 @@ func newRootCommand(rc *runtime) *cobra.Command {
 	root.AddCommand(newLogoutCommand(rc))
 	root.AddCommand(newWhoamiCommand(rc))
 	root.AddCommand(newDevicesCommand(rc))
+	root.AddCommand(newDiscoverCommand(rc))
 	root.AddCommand(newStatusCommand(rc))
 	root.AddCommand(newInfoCommand(rc))
 	root.AddCommand(newSettingsCommand(rc))

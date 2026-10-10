@@ -5,11 +5,41 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/spf13/cobra"
 
 	"github.com/jwmoss/roborocli/internal/roborock"
 )
+
+func newDiscoverCommand(rc *runtime) *cobra.Command {
+	var wait time.Duration
+	cmd := &cobra.Command{
+		Use:   "discover",
+		Short: "Find vacuums announcing themselves on the local network",
+		Args:  usageArgs(cobra.NoArgs),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			found, err := roborock.Discover(wait)
+			if err != nil {
+				return err
+			}
+			if rc.out.IsJSON() {
+				return rc.out.JSON(map[string]any{"devices": found})
+			}
+			if len(found) == 0 {
+				return fmt.Errorf("no vacuum announced itself within %s", wait)
+			}
+			rows := make([][]string, 0, len(found))
+			for _, device := range found {
+				rows = append(rows, []string{device.DUID, device.IP, device.Version})
+			}
+			rc.out.Table([]string{"DUID", "IP", "PV"}, rows)
+			return nil
+		},
+	}
+	cmd.Flags().DurationVar(&wait, "wait", 5*time.Second, "how long to listen")
+	return cmd
+}
 
 func newDevicesCommand(rc *runtime) *cobra.Command {
 	return &cobra.Command{
@@ -82,33 +112,95 @@ func newStatusCommand(rc *runtime) *cobra.Command {
 		Short:   "Show the current vacuum status",
 		Args:    usageArgs(cobra.NoArgs),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return rc.withDevice(cmd.Context(), func(session *deviceSession, caller Caller) error {
+			session, err := rc.openSession(cmd.Context())
+			if err != nil {
+				return err
+			}
+			caller, callErr := rc.openCaller(cmd.Context(), session)
+			if callErr == nil {
+				defer caller.Close()
 				result, err := caller.Call(cmd.Context(), roborock.CmdGetStatus, nil)
-				if err != nil {
-					return err
-				}
-				if rc.out.IsJSON() {
-					var pretty any
-					if err := json.Unmarshal(result, &pretty); err == nil {
-						return rc.out.JSON(map[string]any{
-							"device":    session.Device.Name,
-							"duid":      session.Device.DUID,
-							"transport": caller.Transport(),
-							"status":    pretty,
-						})
+				if err == nil {
+					if rc.out.IsJSON() {
+						var pretty any
+						if json.Unmarshal(result, &pretty) == nil {
+							return rc.out.JSON(map[string]any{
+								"device":    session.Device.Name,
+								"duid":      session.Device.DUID,
+								"transport": caller.Transport(),
+								"status":    pretty,
+							})
+						}
 					}
-					return rc.out.JSON(map[string]any{"raw": json.RawMessage(result)})
+					return rc.renderStatus(result, caller.Transport())
 				}
-				return rc.renderStatus(result, caller.Transport())
-			})
+				callErr = err
+			}
+			shadow, err := session.Cloud.DeviceShadow(cmd.Context(), session.User.RRiot, session.Device.DUID)
+			if err != nil {
+				return callErr
+			}
+			if rc.out.IsJSON() {
+				var pretty any
+				json.Unmarshal(shadow, &pretty)
+				return rc.out.JSON(map[string]any{
+					"device":    session.Device.Name,
+					"duid":      session.Device.DUID,
+					"transport": "cloud-shadow",
+					"status":    pretty,
+					"warning":   callErr.Error(),
+				})
+			}
+			return rc.renderShadow(shadow)
 		},
 	}
 }
 
+func (rc *runtime) renderShadow(raw json.RawMessage) error {
+	var points map[string]any
+	if err := json.Unmarshal(raw, &points); err != nil {
+		return fmt.Errorf("decode device shadow: %w", err)
+	}
+	state := asInt(points["121"])
+	battery := asInt(points["122"])
+	fan := asInt(points["123"])
+	water := asInt(points["124"])
+	errorCode := asInt(points["120"])
+	rows := [][]string{
+		{"state", fmt.Sprintf("%d (%s)", state, roborock.StateName(state))},
+		{"battery", fmt.Sprintf("%d%%", battery)},
+		{"transport", "cloud-shadow"},
+	}
+	if name := roborock.FanSpeedName(fan); name != "" {
+		rows = append(rows, []string{"fan_power", fmt.Sprintf("%d (%s)", fan, name)})
+	}
+	if name := roborock.MopModeName(water); name != "" {
+		rows = append(rows, []string{"water_box_mode", fmt.Sprintf("%d (%s)", water, name)})
+	}
+	if errorCode != 0 {
+		rows = append(rows, []string{"error", fmt.Sprintf("%d (%s)", errorCode, roborock.ErrorName(errorCode))})
+	}
+	for _, item := range []struct {
+		code, label string
+	}{
+		{"125", "main_brush"},
+		{"126", "side_brush"},
+		{"127", "filter"},
+		{"133", "charge_status"},
+		{"134", "drying_status"},
+	} {
+		if value, ok := points[item.code]; ok {
+			rows = append(rows, []string{item.label, fmt.Sprintf("%v", value)})
+		}
+	}
+	rc.out.Table([]string{"FIELD", "VALUE"}, rows)
+	return nil
+}
+
 func (rc *runtime) renderStatus(result json.RawMessage, transport string) error {
-	var status map[string]any
-	if err := json.Unmarshal(result, &status); err != nil {
-		return fmt.Errorf("decode status: %w", err)
+	status, err := statusObject(result)
+	if err != nil {
+		return err
 	}
 	state := asInt(status["state"])
 	battery := asInt(status["battery"])
@@ -720,6 +812,20 @@ func prettyOrRaw(raw json.RawMessage) any {
 		return json.RawMessage(raw)
 	}
 	return pretty
+}
+
+// statusObject accepts the object form and the one-element array form
+// returned by get_status.
+func statusObject(raw json.RawMessage) (map[string]any, error) {
+	var status map[string]any
+	if err := json.Unmarshal(raw, &status); err == nil {
+		return status, nil
+	}
+	var list []map[string]any
+	if err := json.Unmarshal(raw, &list); err == nil && len(list) > 0 {
+		return list[0], nil
+	}
+	return nil, fmt.Errorf("decode status: unexpected payload")
 }
 
 // asInt coerces a JSON number to int, accepting strings too.

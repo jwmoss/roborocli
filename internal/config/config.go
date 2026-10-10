@@ -34,6 +34,8 @@ type Config struct {
 
 	// DefaultDUID selects a device when no --device is given.
 	DefaultDUID string `yaml:"default_duid,omitempty"`
+	// DefaultHost is the vacuum address used when --host is omitted.
+	DefaultHost string `yaml:"default_host,omitempty"`
 	// DeviceIPs caches the last known local IP per device duid.
 	DeviceIPs map[string]string `yaml:"device_ips,omitempty"`
 }
@@ -153,6 +155,7 @@ func (c Config) Redacted() map[string]any {
 		"username":     c.Username,
 		"client_id":    c.ClientID,
 		"default_duid": c.DefaultDUID,
+		"default_host": c.DefaultHost,
 		"logged_in":    c.UserData != nil && c.UserData.RRiot.U != "",
 		"device_ips":   c.DeviceIPs,
 	}
@@ -182,10 +185,7 @@ func applyEnv(cfg *Config) {
 		cfg.DefaultDUID = value
 	}
 	if value := os.Getenv(EnvPrefix + "_HOST"); value != "" {
-		if cfg.DeviceIPs == nil {
-			cfg.DeviceIPs = map[string]string{}
-		}
-		cfg.DeviceIPs[os.Getenv(EnvPrefix+"_DUID")] = value
+		cfg.DefaultHost = value
 	}
 }
 
@@ -194,6 +194,7 @@ func normalize(cfg *Config) {
 	cfg.Username = strings.TrimSpace(cfg.Username)
 	cfg.ClientID = strings.TrimSpace(cfg.ClientID)
 	cfg.DefaultDUID = strings.TrimSpace(cfg.DefaultDUID)
+	cfg.DefaultHost = strings.TrimSpace(cfg.DefaultHost)
 	if cfg.DeviceIPs != nil {
 		cleaned := make(map[string]string, len(cfg.DeviceIPs))
 		for k, v := range cfg.DeviceIPs {

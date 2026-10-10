@@ -41,6 +41,7 @@ func newConfigShowCommand(rc *runtime) *cobra.Command {
 				{"client_id", cfg.ClientID},
 				{"logged_in", fmt.Sprintf("%v", redacted["logged_in"])},
 				{"default_duid", cfg.DefaultDUID},
+				{"default_host", cfg.DefaultHost},
 				{"path", path},
 			}
 			rc.out.Table([]string{"KEY", "VALUE"}, rows)
@@ -53,6 +54,7 @@ func newConfigInitCommand(rc *runtime) *cobra.Command {
 	var (
 		email       string
 		defaultDUID string
+		defaultHost string
 		force       bool
 	)
 	cmd := &cobra.Command{
@@ -73,6 +75,7 @@ func newConfigInitCommand(rc *runtime) *cobra.Command {
 			}
 			cfg.Username = email
 			cfg.DefaultDUID = defaultDUID
+			cfg.DefaultHost = defaultHost
 			cfg.ClientID = roborock.ClientIDFromSeed(installSeed())
 			if err := config.Save(path, cfg, force); err != nil {
 				return err
@@ -87,6 +90,7 @@ func newConfigInitCommand(rc *runtime) *cobra.Command {
 	}
 	cmd.Flags().StringVar(&email, "email", "", "Roborock account email")
 	cmd.Flags().StringVar(&defaultDUID, "default-duid", "", "device duid used when --device is omitted")
+	cmd.Flags().StringVar(&defaultHost, "default-host", "", "vacuum IP used when --host is omitted")
 	cmd.Flags().BoolVar(&force, "force", false, "overwrite an existing config file")
 	return cmd
 }

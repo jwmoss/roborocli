@@ -2,4 +2,8 @@
 
 ## Unreleased
 
-- Initial generated REST API CLI scaffold.
+## 1.0.0
+
+- Add a Roborock client for account login, device listing, and vacuum control.
+- Read full status over the local L01 socket, and fall back to the cloud shadow.
+- Store a default vacuum address in `default_host`.

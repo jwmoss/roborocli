@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"os"
 	"strings"
 	"sync"
 	"time"
@@ -64,6 +65,13 @@ func NewMQTTClient(rriot RRiot) *MQTTClient {
 	}
 }
 
+func mqttProtocolVersion() uint {
+	if os.Getenv("ROBOROCLI_MQTT_PROTO") == "4" {
+		return 4
+	}
+	return 5
+}
+
 // publishTopic returns the app-to-device topic for a device.
 func (m *MQTTClient) publishTopic(duid string) string {
 	return fmt.Sprintf("rr/m/i/%s/%s/%s", m.RRiot.U, m.RRiot.HashedUser(), duid)
@@ -80,12 +88,18 @@ func (m *MQTTClient) Connect(ctx context.Context, duid string) error {
 	if err != nil {
 		return err
 	}
+	scheme := "tcp"
+	if useTLS {
+		scheme = "ssl"
+	}
 	opts := mqtt.NewClientOptions().
-		AddBroker(fmt.Sprintf("%s:%d", host, port)).
+		AddBroker(fmt.Sprintf("%s://%s:%d", scheme, host, port)).
 		SetClientID(fmt.Sprintf("roborocli-%d", time.Now().UnixNano()%100000)).
 		SetUsername(m.RRiot.HashedUser()).
 		SetPassword(m.RRiot.BrokerPassword()).
+		SetProtocolVersion(mqttProtocolVersion()).
 		SetConnectTimeout(m.Timeout).
+		SetKeepAlive(45 * time.Second).
 		SetAutoReconnect(true).
 		SetCleanSession(true)
 	if useTLS {
@@ -102,7 +116,13 @@ func (m *MQTTClient) Connect(ctx context.Context, duid string) error {
 	m.client = client
 
 	topic := m.subscribeTopic(duid)
+	if os.Getenv("ROBOROCLI_MQTT_WILDCARD") == "1" {
+		topic = strings.TrimSuffix(topic, "/"+duid) + "/#"
+	}
 	sub := client.Subscribe(topic, 1, func(_ mqtt.Client, msg mqtt.Message) {
+		if os.Getenv("ROBOROCLI_DEBUG_MQTT") == "1" {
+			fmt.Fprintf(os.Stderr, "mqtt recv %s %d bytes\n", msg.Topic(), len(msg.Payload()))
+		}
 		m.onMessage(msg.Payload())
 	})
 	if !sub.WaitTimeout(m.Timeout) {
@@ -110,6 +130,20 @@ func (m *MQTTClient) Connect(ctx context.Context, duid string) error {
 	}
 	if err := sub.Error(); err != nil {
 		return fmt.Errorf("mqtt subscribe: %w", err)
+	}
+	if os.Getenv("ROBOROCLI_DEBUG_MQTT") == "1" {
+		for _, extra := range []string{"rr/m/o/#", "rr/d/#", "rr/#"} {
+			token := client.Subscribe(extra, 1, func(_ mqtt.Client, msg mqtt.Message) {
+				fmt.Fprintf(os.Stderr, "mqtt extra %s %d bytes\n", msg.Topic(), len(msg.Payload()))
+			})
+			if !token.WaitTimeout(m.Timeout) {
+				fmt.Fprintf(os.Stderr, "mqtt subscribe %s timeout\n", extra)
+				continue
+			}
+			if err := token.Error(); err != nil {
+				fmt.Fprintf(os.Stderr, "mqtt subscribe %s error: %v\n", extra, err)
+			}
+		}
 	}
 	m.subscribed[topic] = true
 	return nil
@@ -123,6 +157,9 @@ func (m *MQTTClient) onMessage(payload []byte) {
 	decoder := NewMQTTDecoder(localKey)
 	decoder.Feed(payload)
 	msg, err := decoder.Next()
+	if os.Getenv("ROBOROCLI_DEBUG_MQTT") == "1" {
+		fmt.Fprintf(os.Stderr, "mqtt decode err=%v msg=%v\n", err, msg != nil)
+	}
 	if err != nil || msg == nil || msg.Payload == nil {
 		return
 	}
@@ -208,7 +245,10 @@ func (m *MQTTClient) Call(ctx context.Context, duid string, method string, param
 		m.clearPending(id)
 		return nil, err
 	}
-	token := m.client.Publish(m.publishTopic(duid), 0, false, frame)
+	if os.Getenv("ROBOROCLI_DEBUG_MQTT") == "1" {
+		fmt.Fprintf(os.Stderr, "mqtt publish %s %d bytes\n", m.publishTopic(duid), len(frame))
+	}
+	token := m.client.Publish(m.publishTopic(duid), 1, false, frame)
 	if !token.WaitTimeout(m.Timeout) {
 		m.clearPending(id)
 		return nil, fmt.Errorf("mqtt publish timed out")
