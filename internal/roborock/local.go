@@ -330,32 +330,6 @@ func (c *LocalClient) clearPending(id uint32) {
 	c.mu.Unlock()
 }
 
-// Ping sends a protocol-level PING_REQUEST and waits for the response.
-func (c *LocalClient) Ping(ctx context.Context) error {
-	if c.conn == nil {
-		return fmt.Errorf("not connected")
-	}
-	c.mu.Lock()
-	version := c.version
-	connNonce, ackNonce := c.connNonce, c.ackNonce
-	c.mu.Unlock()
-
-	msg := &Message{
-		Version:   version,
-		Seq:       uint32(RandomInt(100000, 999999)),
-		Random:    uint32(RandomInt(10000, 99999)),
-		Timestamp: nowTimestamp(),
-		Protocol:  ProtoPingRequest,
-	}
-	frame, err := EncodeLocalFrame(msg, c.LocalKey, connNonce, ackNonce)
-	if err != nil {
-		return err
-	}
-	_ = c.conn.SetWriteDeadline(time.Now().Add(c.Timeout))
-	_, err = c.conn.Write(frame)
-	return err
-}
-
 // Close closes the underlying connection.
 func (c *LocalClient) Close() error {
 	c.mu.Lock()

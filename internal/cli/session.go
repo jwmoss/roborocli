@@ -55,9 +55,7 @@ func (rc *runtime) cloudClient(cfg *config.Config) *roborock.CloudClient {
 		client.SetBaseURL(cfg.BaseURL)
 	}
 	if rc.g.traceHTTP {
-		client.Trace = func(method, path string, status int, d time.Duration) {
-			rc.out.Errorf("[cloud] %s %s -> %d (%s)", method, path, status, d)
-		}
+		client.Trace = traceFn(rc)
 	}
 	return client
 }
@@ -301,9 +299,4 @@ func (rc *runtime) withDevice(ctx context.Context, fn func(session *deviceSessio
 	}
 	defer caller.Close()
 	return fn(session, caller)
-}
-
-// configSave writes the config, keeping private permissions.
-func configSave(rc *runtime, cfg config.Config) error {
-	return config.Save(rc.configPath(), cfg, true)
 }

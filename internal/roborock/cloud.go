@@ -119,17 +119,17 @@ func (c *CloudClient) headerClientID() string {
 
 // ClientIDFromSeed derives a stable 16-character install identifier.
 func ClientIDFromSeed(seed string) string {
-	sum := md256(seed)
+	sum := md5Sum(seed)
 	return base64.RawURLEncoding.EncodeToString(sum[:16])[:16]
 }
 
-func md256(s string) []byte {
+func md5Sum(s string) []byte {
 	h := md5.Sum([]byte(s))
 	return h[:]
 }
 
 // hexMD5 returns the lowercase md5 hex digest.
-func hexMD5(b []byte) string { return hex.EncodeToString(md256(string(b))) }
+func hexMD5(b []byte) string { return hex.EncodeToString(md5Sum(string(b))) }
 
 // sortedKV renders "k=v&k=v" with keys sorted, repeating values joined by ",".
 func sortedKV(values url.Values) string {
@@ -731,39 +731,6 @@ func (c *CloudClient) HomeData(ctx context.Context, user UserData, homeID int64)
 		}
 	}
 	return nil, fmt.Errorf("fetch home data")
-}
-
-// Rooms fetches room names for a home.
-func (c *CloudClient) Rooms(ctx context.Context, rriot RRiot, homeID int64) ([]Room, error) {
-	var rooms []Room
-	err := c.iotRequest(ctx, rriot, http.MethodGet,
-		fmt.Sprintf("/user/homes/%d/rooms", homeID), nil, nil, nil, &rooms)
-	return rooms, err
-}
-
-// Jobs fetches the schedule entries for a device.
-func (c *CloudClient) Jobs(ctx context.Context, rriot RRiot, duid string) ([]json.RawMessage, error) {
-	var jobs []json.RawMessage
-	err := c.iotRequest(ctx, rriot, http.MethodGet,
-		fmt.Sprintf("/user/devices/%s/jobs", url.PathEscape(duid)), nil, nil, nil, &jobs)
-	return jobs, err
-}
-
-// Scenes fetches the routines (scenes) for a device.
-func (c *CloudClient) Scenes(ctx context.Context, rriot RRiot, duid string) ([]json.RawMessage, error) {
-	var scenes []json.RawMessage
-	err := c.iotRequest(ctx, rriot, http.MethodGet,
-		fmt.Sprintf("/user/scene/device/%s", url.PathEscape(duid)), nil, nil, nil, &scenes)
-	return scenes, err
-}
-
-// FirmwareInfo fetches the OTA firmware status for a device.
-func (c *CloudClient) FirmwareInfo(ctx context.Context, rriot RRiot, duid string) (json.RawMessage, error) {
-	var out json.RawMessage
-	err := c.iotRequest(ctx, rriot, http.MethodGet,
-		fmt.Sprintf("/ota/firmware/%s/updatev2", url.PathEscape(duid)),
-		url.Values{"lang": {"en"}}, nil, nil, &out)
-	return out, err
 }
 
 // DeviceShadow fetches the cloud-reported state for a device.
