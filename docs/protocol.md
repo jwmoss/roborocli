@@ -74,13 +74,17 @@ URL as `tcp://<ip>:58867`, and logs under the name `LocalClientService`.
 
 Handshake sequence:
 
-1. Client sends a hello request with the negotiated version and a random
-   connect nonce.
-2. Device answers with a hello response whose random field becomes the ack
-   nonce, which L01 uses in its additional authenticated data.
+1. The client sends a length-prefixed `L01` CONNECT frame. The frame carries a
+   random connect nonce and a keepalive of 10 seconds.
+2. The device answers with a CONNACK frame. Bytes 7-10 of that body are the
+   ack nonce.
+3. The client sends each RPC as a PUBLISH frame (type 4). L01 encryption uses
+   both nonces.
+4. If the device does not answer CONNECT, the client closes the socket. It
+   then sends the classic hello for version `1.0`.
 
-`roborocli` tries version `1.0` first, then `L01`, matching the reference
-ordering.
+Current firmware answers CONNECT on port 58867 even when the cloud protocol
+field says `1.0`.
 
 ## RPC payload
 
