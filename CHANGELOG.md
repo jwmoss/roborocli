@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## [1.0.3] - 2026-10-10
+
+- Apply the configured timeout to cloud requests.
+- Preserve exact RPC JSON numbers and prevent force from bypassing dry-run.
+- Replace synthetic suites with real device checks and static CI.
+
 ## 1.0.2
 
 - Read the `[id, name_id, tag]` room mapping form in `info rooms`, and name

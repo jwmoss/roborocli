@@ -127,8 +127,9 @@ roborocli command app_start '{"clean_type":3}' --json
 roborocli command get_multi_maps_list
 ```
 
-`command` refuses methods that change device state under `--dry-run`, unless
-you pass `--force`.
+`command` refuses methods that change device state under `--dry-run`, including when `--force` is present.
+RPC JSON parameters and results preserve exact numeric values.
+`--timeout` applies to cloud requests and device transports.
 
 ## Cloud API
 
@@ -189,13 +190,14 @@ Environment overrides:
 ## Development
 
 ```bash
-make check      # go mod tidy -diff, go vet, tests, build
-make build      # build ./bin/roborocli
+make check      # static checks and build
+make test       # live, read-only device status
 ```
 
-The protocol package has golden-vector tests for the timestamp scramble and
-the V1/L01 key schedules, plus an end-to-end test that runs the local
-handshake and RPC exchange against an in-process device simulator.
+The live test requires Python 3 and existing Roborock credentials.
+It calls the compiled CLI and verifies a current device response over local TCP or MQTT.
+It uses `--dry-run` to prevent cache writes and device mutations.
+CI runs static checks without credentials. Unit tests and synthetic fixtures are not part of this project.
 
 ## License
 

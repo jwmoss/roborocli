@@ -15,7 +15,6 @@ import (
 // newCommandCommand sends any device RPC method. It is the escape hatch for
 // firmware features the CLI does not wrap.
 func newCommandCommand(rc *runtime) *cobra.Command {
-	var force bool
 	cmd := &cobra.Command{
 		Use:   "command <method> [params-json]",
 		Short: "Send any device RPC method and print the result",
@@ -23,10 +22,10 @@ func newCommandCommand(rc *runtime) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			method := args[0]
 			readOnly := roborock.ReadOnlyCommands[method]
-			if !readOnly && rc.g.dryRun && !force {
-				return fmt.Errorf("dry-run: refusing to send mutating method %s (use --force to send anyway)", method)
+			if !readOnly && rc.g.dryRun {
+				return fmt.Errorf("dry-run: refusing to send mutating method %s", method)
 			}
-			var params any
+			var params json.RawMessage
 			if len(args) == 2 && strings.TrimSpace(args[1]) != "" {
 				if err := json.Unmarshal([]byte(args[1]), &params); err != nil {
 					return fmt.Errorf("%w: params must be valid JSON: %v", errUsage, err)
@@ -38,22 +37,21 @@ func newCommandCommand(rc *runtime) *cobra.Command {
 					return err
 				}
 				if rc.out.IsJSON() {
-					var pretty any
-					if err := json.Unmarshal(res, &pretty); err == nil {
+					if json.Valid(res) {
 						return rc.out.JSON(map[string]any{
 							"method":    method,
-							"result":    pretty,
+							"result":    res,
 							"transport": caller.Transport(),
 						})
 					}
 					return rc.out.JSON(map[string]any{"method": method, "raw": json.RawMessage(res)})
 				}
-				fmt.Fprintln(rc.stdout, compact(prettyOrRaw(res)))
-				return nil
+				_, err = fmt.Fprintln(rc.stdout, string(res))
+				return err
 			})
 		},
 	}
-	cmd.Flags().BoolVar(&force, "force", false, "send even under --dry-run")
+	cmd.Flags().Bool("force", false, "deprecated; dry-run always refuses mutations")
 	return cmd
 }
 

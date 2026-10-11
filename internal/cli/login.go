@@ -42,13 +42,7 @@ func newLoginCommand(rc *runtime) *cobra.Command {
 				return fmt.Errorf("dry-run: refusing to write credentials")
 			}
 
-			cloud := roborock.NewCloudClient(cfg.Username, cfg.ClientID, nil)
-			if cfg.BaseURL != "" {
-				cloud.SetBaseURL(cfg.BaseURL)
-			}
-			if rc.g.traceHTTP {
-				cloud.Trace = traceFn(rc)
-			}
+			cloud := rc.cloudClient(cfg)
 			base, err := cloud.BaseURL(cmd.Context())
 			if err != nil {
 				return err
