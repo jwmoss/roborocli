@@ -53,7 +53,7 @@ make release-check
 
 - Keep only live end-to-end tests against the configured service and static checks.
 - Do not add unit tests, mock transports, fake servers, device simulators, or synthetic subprocess fixtures.
-- Run `make check` for formatting, module consistency, vet, script syntax, and builds.
+- Run `make check` for formatting, module consistency, vet, and builds.
 - Run `make test` with existing credentials for read-only live verification.
 - Report missing credentials or service failures as blocked live checks, never passes.
 - CI runs static checks without credentials. It does not run live service tests.

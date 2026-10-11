@@ -9,18 +9,18 @@ commands over the device's local TCP protocol or the cloud MQTT broker.
 
 ## Status
 
-The protocol layer is reverse engineered and implemented from two sources:
+The CLI, map decoders, PNG renderer, and live test runner use native Go.
+See [docs/protocol.md](docs/protocol.md) for protocol details and live evidence.
 
-- The Roborock Android app `4.74.08` (`com.roborock.smart`), decompiled with
-  [REA](https://github.com/morluto/rea) and jadx. See
-  [docs/protocol.md](docs/protocol.md) for the observed evidence.
-- `python-roborock`, the library behind the Home Assistant integration, for
-  the AES key schedules and the RPC payload shape that the app performs in a
-  native library.
+| Family | Transport | Implemented features |
+| --- | --- | --- |
+| V1 vacuum | Local `1.0`/`L01`, MQTT | Status, controls, detailed history, capabilities, dock settings, maps, routines, watch |
+| B01 Q7 | MQTT | Properties/services, basic and room controls, named modes, history, current map and rooms, watch |
+| B01 Q10 | MQTT | Data points, basic and room controls, named modes, history, current map and rooms, watch |
+| A01 Dyad/Zeo | MQTT | Status, named/numeric data point reads and writes, watch |
 
-Supported vacuums are protocol `1.0` devices (S4 through G20S/Q10 era
-hardware). Protocol `A01`, `B01`, and `L01` devices speak a different
-message layout; the CLI negotiates `1.0` and `L01` on the local link.
+Live verification covers a QX Revo Plus (`roborock.vacuum.a168`). A01 and
+B01 implementations follow the reference source; hardware verification remains open.
 
 ## Install
 
@@ -89,6 +89,11 @@ roborocli info consumables        # brush, filter, and dock part lifetimes
 roborocli info rooms              # room ids and names from the device map
 roborocli info network            # IP, SSID, MAC, RSSI
 roborocli info history            # cleaning summary
+roborocli history last            # latest record, with completion evidence
+roborocli history records --limit 10
+roborocli history record 1791684530
+roborocli capabilities            # supported modes, features, dock capabilities
+roborocli watch --duration 1m      # pushes plus periodic snapshots, as JSON lines
 roborocli settings                # child lock, LED, carpet, volume, DND, map state
 roborocli control fan             # read the fan speed
 roborocli control water           # read the water box mode
@@ -117,6 +122,67 @@ roborocli control reset-consumable main_brush
 
 Mutating commands are refused under `--dry-run`.
 
+Named modes use the device capabilities and verify settings after the write:
+
+```bash
+roborocli control mode vacuum --fan max
+roborocli control mode mop --water medium
+roborocli control mode vac_and_mop --fan balanced
+```
+
+Mode changes set options. Use `control start` or `control rooms` to start a task.
+An acknowledgement or a charging state does not prove that a task completed.
+Check `history last` for the outcome, finish reason, start source, and errors.
+JSON records retain the original device fields in `parts`.
+Legacy V1 records and unknown Q7 status codes retain an `unknown` outcome.
+B01 history IDs use start timestamps; Q10 also retains its native `record_key`.
+
+## Dock and saved routines
+
+```bash
+roborocli dock status
+roborocli dock wash-start          # wash-stop, dry-start, dry-stop, empty-start, empty-stop
+roborocli dock auto-dry on         # omit the value to read it
+roborocli dock wash-mode balanced
+roborocli dock empty-mode smart
+roborocli routines list
+roborocli routines run "Vac followed by Mop"
+```
+
+Dock wrappers require supported V1 dock features. Settings read back their value.
+Dock actions report acknowledgement; check `dock status` for the resulting state.
+Routine execution reports cloud submission. Check live status and history for its outcome.
+
+## Maps
+
+```bash
+roborocli maps list
+roborocli maps show               # geometry, rooms, robot, charger, and available path
+roborocli maps download --output floor.bin
+roborocli maps render --output floor.png
+roborocli maps render --record 1791684530 --output previous.png
+roborocli maps use 0              # V1 saved map flag; refuses an active task
+```
+
+Maps use MQTT. File output refuses an existing path and creates files with mode `0600`.
+Use `--output -` for binary stdout. `--dry-run` permits stdout but refuses file writes.
+Record maps and map selection currently require V1. B01 rendering covers the current
+floor and room geometry; it does not compose every trace, obstacle, or app overlay.
+
+## Other device families
+
+```bash
+roborocli --device <duid> datapoints list
+roborocli --device <duid> datapoints get <name-or-code>
+roborocli --device <duid> datapoints set <name-or-code> '<json-value>'
+roborocli --device <q7-duid> command prop.get '{"property":["status","quantity"]}'
+```
+
+A01 and Q10 data point writes report `published: true, verified: false`.
+Use `datapoints get` to check the value. Unknown codes remain available as numbers.
+These families use their own codes; V1 state names do not apply to them.
+Use `datapoints list` or native Q7 methods for features without a command wrapper.
+
 ## Any other RPC method
 
 Firmware features that the CLI does not wrap are reachable with `command`:
@@ -130,6 +196,7 @@ roborocli command get_multi_maps_list
 `command` refuses methods that change device state under `--dry-run`, including when `--force` is present.
 RPC JSON parameters and results preserve exact numeric values.
 `--timeout` applies to cloud requests and device transports.
+Firmware errors such as `unknown_method` return a nonzero exit code.
 
 ## Cloud API
 
@@ -191,14 +258,16 @@ Environment overrides:
 
 ```bash
 make check      # static checks and build
-make test       # live, read-only device status
+make test       # live, read-only V1 verification with existing credentials
 ```
 
-The live test requires Python 3 and existing Roborock credentials.
-It calls the compiled CLI and verifies a current device response over local TCP or MQTT.
-It uses `--dry-run` to prevent cache writes and device mutations.
+The Go live runner calls the compiled CLI. It checks status over both transports,
+history, capabilities, maps and PNG output, routines, dock reads, watch snapshots,
+and mutation guards. It uses `--dry-run` to prevent cache writes and device mutations.
+It does not test physical controls or A01/B01 hardware. Idle-device checks do not
+prove unsolicited push delivery. The suite requires a configured V1 vacuum with a map.
 CI runs static checks without credentials. Unit tests and synthetic fixtures are not part of this project.
 
 ## License
 
-MIT
+MIT. See [LICENSE](LICENSE).

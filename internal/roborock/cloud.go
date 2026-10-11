@@ -745,3 +745,22 @@ func (c *CloudClient) DeviceShadow(ctx context.Context, rriot RRiot, duid string
 		fmt.Sprintf("/devices/%s/shadow", url.PathEscape(duid)), nil, nil, nil, &out)
 	return out, err
 }
+
+type Routine struct {
+	ID      int64  `json:"id"`
+	Name    string `json:"name"`
+	Enabled *bool  `json:"enabled,omitempty"`
+}
+
+func (c *CloudClient) Routines(ctx context.Context, rriot RRiot, duid string) ([]Routine, error) {
+	var routines []Routine
+	err := c.iotRequest(ctx, rriot, http.MethodGet, "/user/scene/device/"+url.PathEscape(duid), nil, nil, nil, &routines)
+	if routines == nil {
+		routines = []Routine{}
+	}
+	return routines, err
+}
+
+func (c *CloudClient) ExecuteRoutine(ctx context.Context, rriot RRiot, id int64) error {
+	return c.iotRequest(ctx, rriot, http.MethodPost, fmt.Sprintf("/user/scene/%d/execute", id), nil, nil, nil, nil)
+}

@@ -42,8 +42,6 @@ jobs:
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
           go vet ./...
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
-          python -c "import ast, pathlib; ast.parse(pathlib.Path('tests/live.py').read_text())"
-          if ($LASTEXITCODE) { exit $LASTEXITCODE }
           go build ./...
           exit $LASTEXITCODE
 

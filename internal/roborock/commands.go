@@ -1,8 +1,7 @@
 package roborock
 
 // Command names for the V1 protocol, as exposed by the device RPC layer.
-// The full list comes from python-roborock's roborock_typing.py; the vacuum
-// answers "unknown_method" for anything it does not implement.
+// The vacuum answers "unknown_method" for anything it does not implement.
 const (
 	CmdAppStart                = "app_start"
 	CmdAppPause                = "app_pause"
@@ -113,6 +112,8 @@ const (
 // ReadOnlyCommands lists methods that only read device state. The CLI
 // documents them as inspection commands and allows them without --force.
 var ReadOnlyCommands = map[string]bool{
+	"prop.get": true, "service.get_map_list": true, "service.get_record_list": true,
+	"app_get_dryer_setting": true, "get_smart_wash_params": true,
 	CmdGetStatus: true, CmdGetInitStatus: true, CmdAppStat: true,
 	CmdGetConsumable: true, CmdGetRoomMapping: true, CmdGetCleanRecord: true,
 	CmdGetCleanSummary: true, CmdGetCleanSequence: true, CmdGetSegmentStatus: true,

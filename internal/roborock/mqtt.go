@@ -3,6 +3,7 @@ package roborock
 import (
 	"context"
 	"crypto/tls"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -30,6 +31,14 @@ type MQTTClient struct {
 	nextID     uint32
 	subscribed map[string]bool
 	localKey   string
+	stream     eventStream
+	blobs      map[uint32][]byte
+	family     string
+	device     Device
+	product    Product
+	familyMu   sync.Mutex
+	updates    chan map[string]json.RawMessage
+	mapUpdates chan []byte
 }
 
 // BrokerURL parses the MQTT broker reference into host, port, and TLS flag.
@@ -62,6 +71,10 @@ func NewMQTTClient(rriot RRiot) *MQTTClient {
 		Timeout:    orDuration(0, 10*time.Second),
 		pending:    map[uint32]chan rpcResult{},
 		subscribed: map[string]bool{},
+		stream:     eventStream{events: make(chan Event, 256)},
+		blobs:      map[uint32][]byte{},
+		updates:    make(chan map[string]json.RawMessage, 128),
+		mapUpdates: make(chan []byte, 16),
 	}
 }
 
@@ -102,6 +115,7 @@ func (m *MQTTClient) Connect(ctx context.Context, duid string) error {
 		SetKeepAlive(45 * time.Second).
 		SetAutoReconnect(true).
 		SetCleanSession(true)
+	opts.SetConnectionLostHandler(func(_ mqtt.Client, err error) { m.stream.emit(Event{Kind: "disconnected", Error: err.Error()}) })
 	if useTLS {
 		opts.SetTLSConfig(&tls.Config{MinVersion: tls.VersionTLS12})
 	}
@@ -156,33 +170,53 @@ func (m *MQTTClient) onMessage(payload []byte) {
 	m.mu.Unlock()
 	decoder := NewMQTTDecoder(localKey)
 	decoder.Feed(payload)
-	msg, err := decoder.Next()
-	if os.Getenv("ROBOROCLI_DEBUG_MQTT") == "1" {
-		fmt.Fprintf(os.Stderr, "mqtt decode err=%v msg=%v\n", err, msg != nil)
+	for {
+		msg, err := decoder.Next()
+		if os.Getenv("ROBOROCLI_DEBUG_MQTT") == "1" {
+			fmt.Fprintf(os.Stderr, "mqtt decode err=%v msg=%v\n", err, msg != nil)
+		}
+		if err != nil || msg == nil || msg.Payload == nil {
+			return
+		}
+		if m.family != "" && m.family != "v1" {
+			m.dispatchFamily(msg)
+			continue
+		}
+		if msg.Protocol == ProtoMapResponse {
+			m.dispatchBlob(msg)
+			continue
+		}
+		m.dispatchRPC(msg)
 	}
-	if err != nil || msg == nil || msg.Payload == nil {
-		return
-	}
+}
+
+func (m *MQTTClient) dispatchRPC(msg *Message) {
 	var outer struct {
 		DPS map[string]json.RawMessage `json:"dps"`
 	}
 	if err := json.Unmarshal(msg.Payload, &outer); err != nil {
 		return
 	}
+	m.stream.push(outer.DPS, "v1")
 	raw, ok := outer.DPS[fmt.Sprintf("%d", ProtoRPCResponse)]
 	if !ok {
 		return
 	}
-	var inner struct {
-		ID     uint32          `json:"id"`
-		Result json.RawMessage `json:"result"`
-		Error  json.RawMessage `json:"error"`
+	raw, err := dpsValue(raw)
+	if err != nil {
+		return
 	}
+	var inner rpcResponse
 	if err := json.Unmarshal(raw, &inner); err != nil {
 		return
 	}
 	m.mu.Lock()
 	ch, ok := m.pending[inner.ID]
+	_, blob := m.blobs[inner.ID]
+	if blob && inner.response().err == nil {
+		m.mu.Unlock()
+		return
+	}
 	if ok {
 		delete(m.pending, inner.ID)
 	}
@@ -190,12 +224,7 @@ func (m *MQTTClient) onMessage(payload []byte) {
 	if !ok {
 		return
 	}
-	if len(inner.Error) > 0 && string(inner.Error) != "null" {
-		ch <- rpcResult{err: fmt.Errorf("device error: %s", string(inner.Error))}
-		close(ch)
-		return
-	}
-	ch <- rpcResult{result: inner.Result}
+	ch <- inner.response()
 	close(ch)
 }
 
@@ -209,6 +238,16 @@ func (m *MQTTClient) SetDeviceKey(key string) {
 // Call sends an RPC over MQTT with the cloud security envelope and waits for
 // the response.
 func (m *MQTTClient) Call(ctx context.Context, duid string, method string, params any) (json.RawMessage, error) {
+	if method == CmdGetRoomMapping && (m.family == "q7" || m.family == "q10") {
+		return m.familyRooms(ctx, duid)
+	}
+	if m.family != "" && m.family != "v1" {
+		return m.callFamily(ctx, duid, method, params)
+	}
+	return m.call(ctx, duid, method, params, false)
+}
+
+func (m *MQTTClient) call(ctx context.Context, duid string, method string, params any, blob bool) (json.RawMessage, error) {
 	if m.client == nil {
 		return nil, fmt.Errorf("mqtt not connected")
 	}
@@ -216,7 +255,13 @@ func (m *MQTTClient) Call(ctx context.Context, duid string, method string, param
 		params = []any{}
 	}
 	m.mu.Lock()
-	m.nextID = uint32(RandomInt(10000, 32767))
+	if m.nextID == 0 {
+		m.nextID = uint32(RandomInt(10000, 20000))
+	}
+	m.nextID++
+	if m.nextID > 32767 {
+		m.nextID = 10000
+	}
 	id := m.nextID
 	ch := make(chan rpcResult, 1)
 	m.pending[id] = ch
@@ -227,9 +272,15 @@ func (m *MQTTClient) Call(ctx context.Context, duid string, method string, param
 		"endpoint": m.RRiot.SecurityEndpoint(),
 		"nonce":    RandomHex(16),
 	}
+	if blob {
+		nonce, _ := hex.DecodeString(security["nonce"])
+		m.mu.Lock()
+		m.blobs[id] = nonce
+		m.mu.Unlock()
+	}
+	defer m.clearPending(id)
 	payload, err := encodeRPCPayload(id, method, params, security)
 	if err != nil {
-		m.clearPending(id)
 		return nil, err
 	}
 	msg := &Message{
@@ -242,7 +293,6 @@ func (m *MQTTClient) Call(ctx context.Context, duid string, method string, param
 	}
 	frame, err := EncodeMQTTFrame(msg, localKey)
 	if err != nil {
-		m.clearPending(id)
 		return nil, err
 	}
 	if os.Getenv("ROBOROCLI_DEBUG_MQTT") == "1" {
@@ -250,24 +300,23 @@ func (m *MQTTClient) Call(ctx context.Context, duid string, method string, param
 	}
 	token := m.client.Publish(m.publishTopic(duid), 1, false, frame)
 	if !token.WaitTimeout(m.Timeout) {
-		m.clearPending(id)
 		return nil, fmt.Errorf("mqtt publish timed out")
 	}
 	if err := token.Error(); err != nil {
-		m.clearPending(id)
 		return nil, fmt.Errorf("mqtt publish: %w", err)
 	}
 
 	deadline := time.NewTimer(m.Timeout)
 	defer deadline.Stop()
 	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
 	case res := <-ch:
 		if res.err != nil {
 			return nil, res.err
 		}
 		return res.result, nil
 	case <-deadline.C:
-		m.clearPending(id)
 		return nil, fmt.Errorf("timeout waiting for %s", method)
 	}
 }
@@ -275,6 +324,7 @@ func (m *MQTTClient) Call(ctx context.Context, duid string, method string, param
 func (m *MQTTClient) clearPending(id uint32) {
 	m.mu.Lock()
 	delete(m.pending, id)
+	delete(m.blobs, id)
 	m.mu.Unlock()
 }
 
