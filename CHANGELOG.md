@@ -2,11 +2,16 @@
 
 ## Unreleased
 
+## 1.0.2
+
 - Read the `[id, name_id, tag]` room mapping form in `info rooms`, and name
   rooms from the cloud home data. Refresh the cache when a name is missing.
 - Accept room names in `control rooms`, and add `--repeat`.
 - Send `app_segment_clean` as `[{"segments": [...], "repeat": n}]`, as
   python-roborock and Home Assistant do.
+- Increase the local request seq on each call. The device dropped the
+  connection after a lower random seq, so multi-call commands such as `info`,
+  `settings`, and `control rooms` lost results.
 
 ## 1.0.1
 

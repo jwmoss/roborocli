@@ -45,6 +45,7 @@ func (v *fakeVacuum) serveConn(conn net.Conn) {
 	defer conn.Close()
 	decoder := NewLocalDecoder(v.key, 0, 0)
 	buf := make([]byte, 8192)
+	var lastSeq uint32
 	for {
 		_ = conn.SetReadDeadline(time.Now().Add(5 * time.Second))
 		n, err := conn.Read(buf)
@@ -61,6 +62,14 @@ func (v *fakeVacuum) serveConn(conn net.Conn) {
 				}
 				if msg == nil {
 					break
+				}
+				// Like real firmware, drop the connection on a replayed or
+				// out-of-order request sequence number.
+				if msg.Protocol == ProtoGeneralRequest {
+					if msg.Seq <= lastSeq {
+						return
+					}
+					lastSeq = msg.Seq
 				}
 				v.handle(conn, msg)
 			}
@@ -189,6 +198,23 @@ func TestLocalClientConnectAndCall(t *testing.T) {
 	}
 	if status.Battery != 100 || status.State != 8 {
 		t.Fatalf("unexpected result: %+v", status)
+	}
+}
+
+func TestLocalClientManyCallsOnOneConnection(t *testing.T) {
+	key := "local_key_16chr"
+	vac := newFakeVacuum(t, key, map[string]any{CmdGetStatus: map[string]any{"state": 8}})
+	client := &LocalClient{Host: "127.0.0.1", Port: vac.port, LocalKey: key, DUID: "dev1", Timeout: 2 * time.Second}
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	if err := client.Connect(ctx); err != nil {
+		t.Fatalf("Connect: %v", err)
+	}
+	defer client.Close()
+	for i := range 10 {
+		if _, err := client.Call(ctx, CmdGetStatus, nil); err != nil {
+			t.Fatalf("call %d: %v", i+1, err)
+		}
 	}
 }
 
