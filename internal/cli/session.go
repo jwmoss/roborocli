@@ -16,6 +16,7 @@ import (
 type Caller interface {
 	Call(ctx context.Context, method string, params any) (json.RawMessage, error)
 	Transport() string
+	Events() <-chan roborock.Event
 	Close()
 }
 
@@ -246,10 +247,17 @@ func (rc *runtime) cacheDeviceIP(cfg *config.Config, duid, ip string) {
 // connection when the host is known or resolvable, and falls back to MQTT.
 func (rc *runtime) openCaller(ctx context.Context, session *deviceSession) (Caller, error) {
 	cfg := rc.cfg
+	family, err := roborock.Family(session.Device, session.Product)
+	if err != nil {
+		return nil, err
+	}
+	if family != "v1" && rc.g.host != "" {
+		return nil, fmt.Errorf("%s devices require MQTT; omit --host", family)
+	}
 	host := rc.deviceHost(cfg, session.Device.DUID)
 
 	// An explicit --host or --mqtt forces the transport choice.
-	if !rc.g.mqtt {
+	if !rc.g.mqtt && family == "v1" {
 		if host == "" && session.Device.LocalKey != "" {
 			resolved, err := rc.resolveLocalIP(ctx, cfg, session)
 			if err == nil {
@@ -282,8 +290,11 @@ func (rc *runtime) openCaller(ctx context.Context, session *deviceSession) (Call
 	}
 	mqttClient := roborock.NewMQTTClient(session.User.RRiot)
 	mqttClient.Timeout = rc.g.timeout
-	mqttClient.SetDeviceKey(session.Device.LocalKey)
+	if err := mqttClient.ConfigureDevice(session.Device, session.Product); err != nil {
+		return nil, err
+	}
 	if err := mqttClient.Connect(ctx, session.Device.DUID); err != nil {
+		mqttClient.Close()
 		return nil, err
 	}
 	return &mqttCaller{client: mqttClient, duid: session.Device.DUID}, nil
@@ -295,8 +306,9 @@ type localCaller struct{ client *roborock.LocalClient }
 func (l *localCaller) Call(ctx context.Context, method string, params any) (json.RawMessage, error) {
 	return l.client.Call(ctx, method, params)
 }
-func (l *localCaller) Transport() string { return "local" }
-func (l *localCaller) Close()            { _ = l.client.Close() }
+func (l *localCaller) Transport() string             { return "local" }
+func (l *localCaller) Events() <-chan roborock.Event { return l.client.Events() }
+func (l *localCaller) Close()                        { _ = l.client.Close() }
 
 // mqttCaller adapts MQTTClient to the Caller interface.
 type mqttCaller struct {
@@ -307,8 +319,9 @@ type mqttCaller struct {
 func (m *mqttCaller) Call(ctx context.Context, method string, params any) (json.RawMessage, error) {
 	return m.client.Call(ctx, m.duid, method, params)
 }
-func (m *mqttCaller) Transport() string { return "mqtt" }
-func (m *mqttCaller) Close()            { m.client.Close() }
+func (m *mqttCaller) Transport() string             { return "mqtt" }
+func (m *mqttCaller) Events() <-chan roborock.Event { return m.client.Events() }
+func (m *mqttCaller) Close()                        { m.client.Close() }
 
 // withDevice resolves the device session and caller, runs fn, then closes.
 func (rc *runtime) withDevice(ctx context.Context, fn func(session *deviceSession, caller Caller) error) error {

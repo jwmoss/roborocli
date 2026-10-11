@@ -36,6 +36,7 @@ type LocalClient struct {
 	pending   map[uint32]chan rpcResult
 	readErr   error
 	done      chan struct{}
+	stream    eventStream
 }
 
 type rpcResult struct {
@@ -53,6 +54,7 @@ func (c *LocalClient) Connect(ctx context.Context) error {
 	c.seq = uint32(RandomInt(100000, 999999))
 	c.pending = map[uint32]chan rpcResult{}
 	c.done = make(chan struct{})
+	c.stream.events = make(chan Event, 256)
 
 	conn, err := net.DialTimeout("tcp", net.JoinHostPort(c.Host, itoa(orInt(c.Port, LocalPort))), c.Timeout)
 	if err != nil {
@@ -210,6 +212,7 @@ func (c *LocalClient) setReadErr(err error) {
 	c.mu.Lock()
 	if c.readErr == nil {
 		c.readErr = err
+		c.stream.emit(Event{Kind: "disconnected", Error: err.Error()})
 	}
 	c.mu.Unlock()
 }
@@ -225,6 +228,7 @@ func (c *LocalClient) dispatch(msg *Message) {
 	if err := json.Unmarshal(msg.Payload, &outer); err != nil {
 		return
 	}
+	c.stream.push(outer.DPS, "v1")
 	for key, raw := range outer.DPS {
 		if key != fmt.Sprintf("%d", ProtoRPCResponse) {
 			continue
@@ -233,11 +237,7 @@ func (c *LocalClient) dispatch(msg *Message) {
 		if err != nil {
 			continue
 		}
-		var inner struct {
-			ID     uint32          `json:"id"`
-			Result json.RawMessage `json:"result"`
-			Error  json.RawMessage `json:"error"`
-		}
+		var inner rpcResponse
 		if err := json.Unmarshal(innerBytes, &inner); err != nil {
 			continue
 		}
@@ -250,12 +250,7 @@ func (c *LocalClient) dispatch(msg *Message) {
 		if !ok {
 			continue
 		}
-		if len(inner.Error) > 0 && string(inner.Error) != "null" {
-			ch <- rpcResult{err: fmt.Errorf("device error: %s", string(inner.Error))}
-			close(ch)
-			continue
-		}
-		ch <- rpcResult{result: inner.Result}
+		ch <- inner.response()
 		close(ch)
 	}
 }
@@ -313,6 +308,9 @@ func (c *LocalClient) Call(ctx context.Context, method string, params any) (json
 	}
 
 	select {
+	case <-ctx.Done():
+		c.clearPending(id)
+		return nil, ctx.Err()
 	case res := <-ch:
 		if res.err != nil {
 			return nil, res.err
@@ -370,11 +368,34 @@ func encodeRPCPayload(id uint32, method string, params any, security map[string]
 // dpsValue unwraps one data point. The dps map carries each point as a JSON
 // string containing the inner payload, so callers unmarshal twice.
 func dpsValue(raw json.RawMessage) (json.RawMessage, error) {
+	if len(raw) > 0 && raw[0] != '"' {
+		return raw, nil
+	}
 	var text string
 	if err := json.Unmarshal(raw, &text); err != nil {
 		return nil, err
 	}
 	return json.RawMessage(text), nil
+}
+
+type rpcResponse struct {
+	ID     uint32          `json:"id"`
+	Result json.RawMessage `json:"result"`
+	Error  json.RawMessage `json:"error"`
+}
+
+func (r rpcResponse) response() rpcResult {
+	if len(r.Error) > 0 && string(r.Error) != "null" {
+		return rpcResult{err: fmt.Errorf("device error: %s", r.Error)}
+	}
+	if len(r.Result) == 0 || string(r.Result) == "null" {
+		return rpcResult{err: fmt.Errorf("device response has no result")}
+	}
+	var value string
+	if json.Unmarshal(r.Result, &value) == nil && value != "ok" {
+		return rpcResult{err: fmt.Errorf("device rejected command: %s", value)}
+	}
+	return rpcResult{result: r.Result}
 }
 
 // nowTimestamp returns the current unix timestamp in seconds.

@@ -70,6 +70,7 @@ func newDevicesCommand(rc *runtime) *cobra.Command {
 				}
 				list := make([]entry, 0, len(devices))
 				for _, d := range devices {
+					d.LocalKey = ""
 					list = append(list, entry{
 						Device: d,
 						Model:  home.ProductFor(d).Model,
@@ -117,6 +118,10 @@ func newStatusCommand(rc *runtime) *cobra.Command {
 				defer caller.Close()
 				result, err := caller.Call(cmd.Context(), roborock.CmdGetStatus, nil)
 				if err == nil {
+					family, _ := roborock.Family(session.Device, session.Product)
+					if family != "v1" {
+						return rc.out.JSON(map[string]any{"device": session.Device.Name, "family": family, "status": result, "transport": caller.Transport()})
+					}
 					if rc.out.IsJSON() {
 						var pretty any
 						if json.Unmarshal(result, &pretty) == nil {
@@ -267,6 +272,9 @@ func newInfoCommand(rc *runtime) *cobra.Command {
 					"product":   session.Product,
 					"transport": caller.Transport(),
 				}
+				publicDevice := session.Device
+				publicDevice.LocalKey = ""
+				payload["device"] = publicDevice
 				for method, res := range results {
 					payload[method] = prettyOrRaw(res)
 				}
@@ -479,7 +487,7 @@ func resolveRooms(args []string, rooms []room) ([]int64, error) {
 }
 
 // segmentCleanParams builds the app_segment_clean payload that current
-// firmware expects, as python-roborock and Home Assistant send it.
+// firmware expects.
 func segmentCleanParams(ids []int64, repeat int) []any {
 	return []any{map[string]any{"segments": ids, "repeat": repeat}}
 }
@@ -517,7 +525,7 @@ func newNetworkCommand(rc *runtime) *cobra.Command {
 }
 
 func newHistoryCommand(rc *runtime) *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:     "history",
 		Aliases: []string{"clean-history"},
 		Short:   "Show the cleaning summary",
@@ -528,7 +536,11 @@ func newHistoryCommand(rc *runtime) *cobra.Command {
 				if err != nil {
 					return err
 				}
-				if rc.out.IsJSON() || rc.out.IsPlain() {
+				family, err := roborock.Family(session.Device, session.Product)
+				if err != nil {
+					return err
+				}
+				if rc.out.IsJSON() || rc.out.IsPlain() || family != "v1" {
 					return rc.out.JSON(prettyOrRaw(res))
 				}
 				var summary map[string]any
@@ -540,6 +552,8 @@ func newHistoryCommand(rc *runtime) *cobra.Command {
 			})
 		},
 	}
+	addHistoryDetails(rc, cmd)
+	return cmd
 }
 
 func newSettingsCommand(rc *runtime) *cobra.Command {
@@ -609,6 +623,7 @@ func newControlCommand(rc *runtime) *cobra.Command {
 	cmd.AddCommand(newVolumeCommand(rc))
 	cmd.AddCommand(newDndCommand(rc))
 	cmd.AddCommand(newResetConsumableCommand(rc))
+	cmd.AddCommand(newModeCommand(rc))
 	return cmd
 }
 
@@ -646,6 +661,12 @@ func (rc *runtime) sendMutating(cmd *cobra.Command, caller Caller, method string
 			"result":    prettyOrRaw(res),
 			"transport": caller.Transport(),
 		})
+	}
+	var receipt struct {
+		Published bool `json:"published"`
+	}
+	if json.Unmarshal(res, &receipt) == nil && receipt.Published {
+		successMsg = "command published; use status or datapoints get to verify"
 	}
 	rc.out.Success(successMsg)
 	if rc.out.IsPlain() {

@@ -1,0 +1,2029 @@
+{
+  "clean_types": {
+    "1": "all_zone",
+    "2": "draw_zone",
+    "3": "select_zone",
+    "4": "quick_build",
+    "5": "video_patrol",
+    "6": "pet_patrol"
+  },
+  "datapoints": {
+    "dyad": {
+      "10000": "id_query",
+      "10001": "f_c",
+      "10002": "schedule_task",
+      "10003": "snd_switch",
+      "10004": "snd_state",
+      "10005": "product_info",
+      "10006": "privacy_info",
+      "10007": "ota_nfo",
+      "10101": "rpc_request",
+      "10102": "rpc_response",
+      "134": "drying_status",
+      "200": "start",
+      "201": "status",
+      "202": "self_clean_mode",
+      "203": "self_clean_level",
+      "204": "warm_level",
+      "205": "clean_mode",
+      "206": "suction",
+      "207": "water_level",
+      "208": "brush_speed",
+      "209": "power",
+      "210": "countdown_time",
+      "212": "auto_self_clean_set",
+      "213": "auto_dry",
+      "214": "mesh_left",
+      "215": "brush_left",
+      "216": "error",
+      "218": "mesh_reset",
+      "219": "brush_reset",
+      "221": "volume_set",
+      "222": "stand_lock_auto_run",
+      "223": "auto_self_clean_set_mode",
+      "224": "auto_dry_mode",
+      "225": "silent_dry_duration",
+      "226": "silent_mode",
+      "227": "silent_mode_start_time",
+      "228": "silent_mode_end_time",
+      "229": "recent_run_time",
+      "230": "total_run_time",
+      "235": "feature_info",
+      "236": "recover_settings",
+      "237": "dry_countdown"
+    },
+    "q10": {
+      "100": "dpSuspectedThresholdUp",
+      "101": "dpCommon",
+      "102": "dpRequestDps",
+      "103": "dpCliffRestrictedAreaUp",
+      "104": "dpBreakpointClean",
+      "105": "dpValleyPointCharging",
+      "106": "dpValleyPointChargingDataUp",
+      "107": "dpValleyPointChargingData",
+      "108": "dpVoiceVersion",
+      "109": "dpRobotCountryCode",
+      "11": "dpSeek",
+      "110": "dpHeartbeat",
+      "112": "dpUnknown112",
+      "113": "dpUnknown113",
+      "12": "dpRemote",
+      "121": "dpStatus",
+      "122": "dpBattery",
+      "123": "dpFanLevel",
+      "124": "dpWaterLevel",
+      "125": "dpMainBrushLife",
+      "126": "dpSideBrushLife",
+      "127": "dpFilterLife",
+      "13": "dpMapReset",
+      "132": "dpTaskCancelInMotion",
+      "135": "dpOffline",
+      "136": "dpCleanCount",
+      "137": "dpCleanMode",
+      "138": "dpCleanTaskType",
+      "139": "dpBackType",
+      "141": "dpCleaningProgress",
+      "142": "dpFleeingGoods",
+      "16": "dpRequest",
+      "18": "dpResetSideBrush",
+      "20": "dpResetMainBrush",
+      "201": "dpStartClean",
+      "202": "dpStartBack",
+      "203": "dpStartDockTask",
+      "204": "dpPause",
+      "205": "dpResume",
+      "206": "dpStop",
+      "207": "dpUserPlan",
+      "22": "dpResetFilter",
+      "23": "dpRagLife",
+      "24": "dpResetRagLife",
+      "25": "dpNotDisturb",
+      "26": "dpVolume",
+      "27": "dpBeakClean",
+      "29": "dpTotalCleanArea",
+      "30": "dpTotalCleanCount",
+      "31": "dpTotalCleanTime",
+      "32": "dpTimer",
+      "33": "dpNotDisturbData",
+      "34": "dpDeviceInfo",
+      "35": "dpVoicePackage",
+      "36": "dpVoiceLanguage",
+      "37": "dpDustSwitch",
+      "39": "dpCustomMode",
+      "40": "dpMopState",
+      "42": "dpUnit",
+      "44": "dpCarpetCleanPrefer",
+      "45": "dpAutoBoost",
+      "47": "dpChildLock",
+      "50": "dpDustSetting",
+      "51": "dpMapSaveSwitch",
+      "52": "dpCleanRecord",
+      "53": "dpRecentCleanRecord",
+      "54": "dpRestrictedZone",
+      "55": "dpRestrictedZoneUp",
+      "56": "dpVirtualWall",
+      "57": "dpVirtualWallUp",
+      "58": "dpZoned",
+      "59": "dpZonedUp",
+      "6": "dpCleanTime",
+      "60": "dpMultiMapSwitch",
+      "61": "dpMultiMap",
+      "62": "dpCustomerClean",
+      "63": "dpCustomerCleanRequest",
+      "64": "dpGetCarpet",
+      "65": "dpCarpetUp",
+      "66": "dpSelfIdentifyingCarpet",
+      "67": "dpSensorLife",
+      "68": "dpResetSensor",
+      "69": "dpRequestTimer",
+      "7": "dpCleanArea",
+      "70": "dpRemoveZoned",
+      "71": "dpRemoveZonedUp",
+      "72": "dpRoomMerge",
+      "73": "dpRoomSplit",
+      "74": "dpResetRoomName",
+      "75": "dpRequestNotDisturbData",
+      "76": "dpCarpetCleanType",
+      "77": "dpButtonLightSwitch",
+      "78": "dpCleanLine",
+      "79": "dpTimeZone",
+      "80": "dpAreaUnit",
+      "81": "dpNetInfo",
+      "82": "dpCleanOrder",
+      "83": "dpRobotType",
+      "84": "dpLogSwitch",
+      "85": "dpFloorMaterial",
+      "86": "dpLineLaserObstacleAvoidance",
+      "87": "dpCleanProgress",
+      "88": "dpGroundClean",
+      "89": "dpIgnoreObstacle",
+      "90": "dpFault",
+      "91": "dpCleanExpand",
+      "92": "dpNotDisturbExpand",
+      "93": "dpTimerType",
+      "94": "dpCreateMapFinished",
+      "95": "dpAddCleanArea",
+      "96": "dpAddCleanState",
+      "97": "dpRestrictedArea",
+      "98": "dpRestrictedAreaUp",
+      "99": "dpSuspectedThreshold"
+    },
+    "v1": {
+      "120": "error_code",
+      "121": "state",
+      "122": "battery",
+      "123": "fan_power",
+      "124": "water_box_mode",
+      "125": "main_brush_work_time",
+      "126": "side_brush_work_time",
+      "127": "filter_work_time",
+      "128": "additional_props",
+      "130": "task_complete",
+      "131": "task_cancel_low_power",
+      "132": "task_cancel_in_motion",
+      "133": "charge_status",
+      "134": "drying_status",
+      "135": "offline_status"
+    },
+    "zeo": {
+      "10000": "id_query",
+      "10001": "f_c",
+      "10003": "set_sound_package",
+      "10004": "snd_state",
+      "10005": "product_info",
+      "10006": "privacy_info",
+      "10007": "ota_nfo",
+      "10008": "washing_log",
+      "10009": "voice_volume",
+      "10101": "rpc_request",
+      "10102": "rpc_response",
+      "10301": "voice_switch",
+      "10302": "voice_record_info",
+      "10303": "voice_record",
+      "10304": "voice_record_delete",
+      "200": "start",
+      "201": "pause",
+      "202": "shutdown",
+      "203": "state",
+      "204": "mode",
+      "205": "program",
+      "206": "child_lock",
+      "207": "temp",
+      "208": "rinse_times",
+      "209": "spin_level",
+      "210": "drying_mode",
+      "211": "detergent_set",
+      "212": "softener_set",
+      "213": "detergent_type",
+      "214": "softener_type",
+      "215": "dirt_detection_switch",
+      "216": "dirt_detection_status",
+      "217": "countdown",
+      "218": "washing_left",
+      "219": "doorlock_state",
+      "220": "error",
+      "221": "custom_param_save",
+      "222": "custom_param_get",
+      "223": "sound_set",
+      "224": "times_after_clean",
+      "225": "default_setting",
+      "226": "detergent_empty",
+      "227": "softener_empty",
+      "228": "uv_light",
+      "229": "light_setting",
+      "230": "detergent_volume",
+      "231": "softener_volume",
+      "232": "app_authorization",
+      "233": "soak",
+      "234": "total_time",
+      "235": "smart_hosting",
+      "236": "smart_hosting_time",
+      "237": "feature_bits",
+      "238": "smart_hosting_waited_time",
+      "239": "custom_program_cleaning_time",
+      "240": "silent_mode_on",
+      "241": "silent_mode_start_time",
+      "242": "silent_mode_end_time",
+      "243": "unknown",
+      "244": "dry_care_mode",
+      "245": "softener_expansion_type",
+      "247": "smile_light_status",
+      "248": "detergent_expansion_type",
+      "249": "fluff_cleaned",
+      "250": "is_need_fluff_clean",
+      "251": "power_light",
+      "252": "panel_program_params_set",
+      "253": "panel_program_params_set_result",
+      "254": "save_adapted_cloud_program",
+      "255": "wash_dry_linked",
+      "256": "drying_method",
+      "257": "steam_volume",
+      "258": "ion_deodorization",
+      "260": "panel_timing_program_params",
+      "261": "steam_care_time",
+      "262": "device_bound",
+      "263": "cloth_put_in",
+      "264": "cloth_ready_to_dry_count_down",
+      "265": "start_dryer_error",
+      "266": "wifi_linkage_reset"
+    }
+  },
+  "docks": {
+    "-9999": {
+      "is_collectable": false,
+      "is_dryable": false,
+      "is_washable": false
+    },
+    "0": {
+      "is_collectable": false,
+      "is_dryable": false,
+      "is_washable": false
+    },
+    "1": {
+      "is_collectable": true,
+      "is_dryable": false,
+      "is_washable": false
+    },
+    "10": {
+      "is_collectable": true,
+      "is_dryable": true,
+      "is_washable": true
+    },
+    "11": {
+      "is_collectable": true,
+      "is_dryable": true,
+      "is_washable": true
+    },
+    "13": {
+      "is_collectable": true,
+      "is_dryable": true,
+      "is_washable": true
+    },
+    "14": {
+      "is_collectable": true,
+      "is_dryable": true,
+      "is_washable": true
+    },
+    "15": {
+      "is_collectable": true,
+      "is_dryable": true,
+      "is_washable": true
+    },
+    "16": {
+      "is_collectable": true,
+      "is_dryable": true,
+      "is_washable": true
+    },
+    "17": {
+      "is_collectable": true,
+      "is_dryable": true,
+      "is_washable": true
+    },
+    "18": {
+      "is_collectable": true,
+      "is_dryable": true,
+      "is_washable": true
+    },
+    "19": {
+      "is_collectable": true,
+      "is_dryable": true,
+      "is_washable": true
+    },
+    "2": {
+      "is_collectable": false,
+      "is_dryable": false,
+      "is_washable": true
+    },
+    "20": {
+      "is_collectable": true,
+      "is_dryable": true,
+      "is_washable": true
+    },
+    "21": {
+      "is_collectable": true,
+      "is_dryable": true,
+      "is_washable": true
+    },
+    "22": {
+      "is_collectable": true,
+      "is_dryable": true,
+      "is_washable": true
+    },
+    "23": {
+      "is_collectable": true,
+      "is_dryable": true,
+      "is_washable": true
+    },
+    "24": {
+      "is_collectable": true,
+      "is_dryable": true,
+      "is_washable": true
+    },
+    "26": {
+      "is_collectable": true,
+      "is_dryable": true,
+      "is_washable": true
+    },
+    "27": {
+      "is_collectable": true,
+      "is_dryable": true,
+      "is_washable": true
+    },
+    "28": {
+      "is_collectable": true,
+      "is_dryable": true,
+      "is_washable": true
+    },
+    "29": {
+      "is_collectable": true,
+      "is_dryable": true,
+      "is_washable": true
+    },
+    "3": {
+      "is_collectable": true,
+      "is_dryable": false,
+      "is_washable": true
+    },
+    "30": {
+      "is_collectable": true,
+      "is_dryable": true,
+      "is_washable": true
+    },
+    "31": {
+      "is_collectable": true,
+      "is_dryable": true,
+      "is_washable": true
+    },
+    "32": {
+      "is_collectable": true,
+      "is_dryable": true,
+      "is_washable": true
+    },
+    "33": {
+      "is_collectable": true,
+      "is_dryable": true,
+      "is_washable": true
+    },
+    "34": {
+      "is_collectable": true,
+      "is_dryable": true,
+      "is_washable": true
+    },
+    "35": {
+      "is_collectable": true,
+      "is_dryable": true,
+      "is_washable": true
+    },
+    "37": {
+      "is_collectable": true,
+      "is_dryable": true,
+      "is_washable": true
+    },
+    "38": {
+      "is_collectable": true,
+      "is_dryable": true,
+      "is_washable": true
+    },
+    "39": {
+      "is_collectable": true,
+      "is_dryable": true,
+      "is_washable": true
+    },
+    "40": {
+      "is_collectable": true,
+      "is_dryable": true,
+      "is_washable": true
+    },
+    "41": {
+      "is_collectable": true,
+      "is_dryable": true,
+      "is_washable": true
+    },
+    "42": {
+      "is_collectable": true,
+      "is_dryable": true,
+      "is_washable": true
+    },
+    "43": {
+      "is_collectable": true,
+      "is_dryable": true,
+      "is_washable": true
+    },
+    "44": {
+      "is_collectable": true,
+      "is_dryable": true,
+      "is_washable": true
+    },
+    "45": {
+      "is_collectable": true,
+      "is_dryable": true,
+      "is_washable": true
+    },
+    "46": {
+      "is_collectable": true,
+      "is_dryable": true,
+      "is_washable": true
+    },
+    "5": {
+      "is_collectable": true,
+      "is_dryable": false,
+      "is_washable": false
+    },
+    "6": {
+      "is_collectable": true,
+      "is_dryable": true,
+      "is_washable": true
+    },
+    "7": {
+      "is_collectable": true,
+      "is_dryable": true,
+      "is_washable": true
+    },
+    "8": {
+      "is_collectable": true,
+      "is_dryable": true,
+      "is_washable": true
+    },
+    "9": {
+      "is_collectable": true,
+      "is_dryable": true,
+      "is_washable": true
+    }
+  },
+  "finish_reasons": {
+    "101": "cleanup_interrupted",
+    "102": "breakpoint",
+    "103": "manual_interrupt",
+    "104": "cleanup_interrupted",
+    "105": "cleanup_interrupted",
+    "106": "cleanup_interrupted",
+    "107": "cleanup_interrupted",
+    "109": "cleanup_interrupted",
+    "110": "cleanup_interrupted",
+    "114": "patrol_success",
+    "115": "patrol_fail",
+    "116": "pet_patrol_success",
+    "117": "pet_patrol_fail",
+    "21": "manual_interrupt",
+    "24": "cleanup_interrupted",
+    "29": "manual_interrupt",
+    "32": "breakpoint",
+    "33": "breakpoint",
+    "34": "cleanup_interrupted",
+    "35": "manual_interrupt",
+    "36": "manual_interrupt",
+    "37": "manual_interrupt",
+    "43": "manual_interrupt",
+    "45": "locate_fail",
+    "48": "manual_interrupt",
+    "49": "manual_interrupt",
+    "50": "manual_interrupt",
+    "51": "cleanup_interrupted",
+    "52": "finished_cleaning",
+    "54": "finished_cleaning",
+    "55": "finished_cleaning",
+    "56": "finished_cleaning",
+    "57": "finished_cleaning",
+    "60": "manual_interrupt",
+    "61": "area_unreachable",
+    "62": "area_unreachable",
+    "64": "cleanup_interrupted",
+    "65": "locate_fail",
+    "67": "washing_error",
+    "68": "back_to_wash_failure"
+  },
+  "models": {
+    "a05": [
+      "is_mop_forbidden_supported",
+      "is_custom_mode_supported",
+      "is_collect_dust_mode_supported",
+      "is_support_water_mode"
+    ],
+    "a08": [
+      "is_custom_mode_supported",
+      "is_collect_dust_mode_supported"
+    ],
+    "a09": [
+      "is_mop_forbidden_supported",
+      "is_soft_clean_mode_supported",
+      "is_custom_mode_supported",
+      "is_collect_dust_mode_supported",
+      "is_support_water_mode",
+      "is_ai_recognition_setting_supported",
+      "is_ai_recognition_obstacle_supported",
+      "is_new_remote_view_supported"
+    ],
+    "a10": [
+      "is_mop_forbidden_supported",
+      "is_soft_clean_mode_supported",
+      "is_custom_mode_supported",
+      "is_collect_dust_mode_supported",
+      "is_support_water_mode",
+      "is_ai_recognition_setting_supported",
+      "is_ai_recognition_obstacle_supported",
+      "is_new_remote_view_supported"
+    ],
+    "a100": [
+      "is_custom_mode_supported",
+      "is_collect_dust_mode_supported",
+      "is_support_water_mode",
+      "is_ai_recognition_setting_supported",
+      "is_ai_recognition_obstacle_supported",
+      "is_pure_clean_mop_supported",
+      "is_max_plus_mode_supported",
+      "is_clean_route_setting_supported",
+      "is_customized_clean_supported"
+    ],
+    "a101": [
+      "is_custom_mode_supported",
+      "is_collect_dust_mode_supported",
+      "is_support_water_mode",
+      "is_ai_recognition_setting_supported",
+      "is_ai_recognition_obstacle_supported",
+      "is_pure_clean_mop_supported",
+      "is_max_plus_mode_supported",
+      "is_clean_route_setting_supported",
+      "is_customized_clean_supported"
+    ],
+    "a103": [
+      "is_custom_mode_supported",
+      "is_collect_dust_mode_supported",
+      "is_support_water_mode",
+      "is_ai_recognition_setting_supported",
+      "is_ai_recognition_obstacle_supported",
+      "is_pure_clean_mop_supported",
+      "is_max_plus_mode_supported",
+      "is_clean_route_setting_supported",
+      "is_customized_clean_supported"
+    ],
+    "a104": [
+      "is_custom_mode_supported",
+      "is_collect_dust_mode_supported",
+      "is_support_water_mode",
+      "is_ai_recognition_setting_supported",
+      "is_ai_recognition_obstacle_supported",
+      "is_pure_clean_mop_supported",
+      "is_max_plus_mode_supported",
+      "is_clean_route_setting_supported",
+      "is_customized_clean_supported"
+    ],
+    "a11": [
+      "is_mop_forbidden_supported",
+      "is_soft_clean_mode_supported",
+      "is_custom_mode_supported",
+      "is_collect_dust_mode_supported",
+      "is_support_water_mode",
+      "is_new_remote_view_supported"
+    ],
+    "a116": [
+      "is_custom_mode_supported",
+      "is_collect_dust_mode_supported",
+      "is_support_water_mode",
+      "is_ai_recognition_setting_supported",
+      "is_ai_recognition_obstacle_supported",
+      "is_pure_clean_mop_supported",
+      "is_new_remote_view_supported",
+      "is_max_plus_mode_supported",
+      "is_clean_route_setting_supported",
+      "is_customized_clean_supported"
+    ],
+    "a117": [
+      "is_custom_mode_supported",
+      "is_collect_dust_mode_supported",
+      "is_support_water_mode",
+      "is_ai_recognition_setting_supported",
+      "is_ai_recognition_obstacle_supported",
+      "is_pure_clean_mop_supported",
+      "is_new_remote_view_supported",
+      "is_max_plus_mode_supported",
+      "is_clean_route_setting_supported",
+      "is_customized_clean_supported"
+    ],
+    "a122": [
+      "is_custom_mode_supported",
+      "is_collect_dust_mode_supported",
+      "is_support_water_mode",
+      "is_ai_recognition_setting_supported",
+      "is_ai_recognition_obstacle_supported",
+      "is_pure_clean_mop_supported",
+      "is_max_plus_mode_supported",
+      "is_clean_route_setting_supported",
+      "is_customized_clean_supported"
+    ],
+    "a123": [
+      "is_custom_mode_supported",
+      "is_collect_dust_mode_supported",
+      "is_support_water_mode",
+      "is_ai_recognition_setting_supported",
+      "is_ai_recognition_obstacle_supported",
+      "is_pure_clean_mop_supported",
+      "is_max_plus_mode_supported",
+      "is_clean_route_setting_supported",
+      "is_customized_clean_supported"
+    ],
+    "a124": [
+      "is_custom_mode_supported",
+      "is_collect_dust_mode_supported",
+      "is_support_water_mode",
+      "is_pure_clean_mop_supported",
+      "is_none_pure_clean_mop_with_max_plus"
+    ],
+    "a125": [
+      "is_custom_mode_supported",
+      "is_collect_dust_mode_supported",
+      "is_support_water_mode",
+      "is_pure_clean_mop_supported",
+      "is_none_pure_clean_mop_with_max_plus"
+    ],
+    "a134": [
+      "is_custom_mode_supported",
+      "is_collect_dust_mode_supported",
+      "is_support_water_mode",
+      "is_ai_recognition_setting_supported",
+      "is_ai_recognition_obstacle_supported",
+      "is_pure_clean_mop_supported",
+      "is_new_remote_view_supported",
+      "is_max_plus_mode_supported",
+      "is_clean_route_setting_supported",
+      "is_customized_clean_supported"
+    ],
+    "a135": [
+      "is_custom_mode_supported",
+      "is_collect_dust_mode_supported",
+      "is_support_water_mode",
+      "is_ai_recognition_setting_supported",
+      "is_ai_recognition_obstacle_supported",
+      "is_pure_clean_mop_supported",
+      "is_new_remote_view_supported",
+      "is_max_plus_mode_supported",
+      "is_clean_route_setting_supported",
+      "is_customized_clean_supported"
+    ],
+    "a136": [
+      "is_custom_mode_supported",
+      "is_collect_dust_mode_supported",
+      "is_support_water_mode",
+      "is_ai_recognition_setting_supported",
+      "is_ai_recognition_obstacle_supported",
+      "is_pure_clean_mop_supported",
+      "is_new_remote_view_supported",
+      "is_max_plus_mode_supported",
+      "is_clean_route_setting_supported",
+      "is_customized_clean_supported"
+    ],
+    "a139": [
+      "is_custom_mode_supported",
+      "is_collect_dust_mode_supported",
+      "is_support_water_mode",
+      "is_pure_clean_mop_supported",
+      "is_none_pure_clean_mop_with_max_plus"
+    ],
+    "a14": [
+      "is_mop_forbidden_supported",
+      "is_custom_mode_supported",
+      "is_collect_dust_mode_supported",
+      "is_support_water_mode",
+      "is_pure_clean_mop_supported",
+      "is_new_remote_view_supported",
+      "is_clean_route_setting_supported",
+      "is_mop_shake_module_supported",
+      "is_customized_clean_supported"
+    ],
+    "a140": [
+      "is_custom_mode_supported",
+      "is_collect_dust_mode_supported",
+      "is_support_water_mode",
+      "is_pure_clean_mop_supported",
+      "is_none_pure_clean_mop_with_max_plus"
+    ],
+    "a143": [
+      "is_custom_mode_supported",
+      "is_collect_dust_mode_supported",
+      "is_support_water_mode",
+      "is_ai_recognition_setting_supported",
+      "is_ai_recognition_obstacle_supported",
+      "is_pure_clean_mop_supported",
+      "is_new_remote_view_supported",
+      "is_max_plus_mode_supported",
+      "is_clean_route_setting_supported",
+      "is_customized_clean_supported"
+    ],
+    "a144": [
+      "is_custom_mode_supported",
+      "is_collect_dust_mode_supported",
+      "is_support_water_mode",
+      "is_ai_recognition_setting_supported",
+      "is_ai_recognition_obstacle_supported",
+      "is_pure_clean_mop_supported",
+      "is_new_remote_view_supported",
+      "is_max_plus_mode_supported",
+      "is_clean_route_setting_supported",
+      "is_customized_clean_supported"
+    ],
+    "a146": [
+      "is_custom_mode_supported",
+      "is_collect_dust_mode_supported",
+      "is_support_water_mode",
+      "is_ai_recognition_setting_supported",
+      "is_ai_recognition_obstacle_supported",
+      "is_pure_clean_mop_supported",
+      "is_new_remote_view_supported",
+      "is_max_plus_mode_supported",
+      "is_clean_route_setting_supported",
+      "is_mop_shake_module_supported",
+      "is_customized_clean_supported"
+    ],
+    "a147": [
+      "is_custom_mode_supported",
+      "is_collect_dust_mode_supported",
+      "is_support_water_mode",
+      "is_ai_recognition_setting_supported",
+      "is_ai_recognition_obstacle_supported",
+      "is_pure_clean_mop_supported",
+      "is_new_remote_view_supported",
+      "is_max_plus_mode_supported",
+      "is_clean_route_setting_supported",
+      "is_mop_shake_module_supported",
+      "is_customized_clean_supported"
+    ],
+    "a15": [
+      "is_mop_forbidden_supported",
+      "is_custom_mode_supported",
+      "is_collect_dust_mode_supported",
+      "is_support_water_mode",
+      "is_pure_clean_mop_supported",
+      "is_new_remote_view_supported",
+      "is_clean_route_setting_supported",
+      "is_mop_shake_module_supported",
+      "is_customized_clean_supported"
+    ],
+    "a155": [
+      "is_custom_mode_supported",
+      "is_collect_dust_mode_supported",
+      "is_support_water_mode",
+      "is_ai_recognition_setting_supported",
+      "is_ai_recognition_obstacle_supported",
+      "is_pure_clean_mop_supported",
+      "is_new_remote_view_supported",
+      "is_max_plus_mode_supported",
+      "is_clean_route_setting_supported",
+      "is_customized_clean_supported"
+    ],
+    "a156": [
+      "is_custom_mode_supported",
+      "is_collect_dust_mode_supported",
+      "is_support_water_mode",
+      "is_ai_recognition_setting_supported",
+      "is_ai_recognition_obstacle_supported",
+      "is_pure_clean_mop_supported",
+      "is_new_remote_view_supported",
+      "is_max_plus_mode_supported",
+      "is_clean_route_setting_supported",
+      "is_customized_clean_supported"
+    ],
+    "a158": [
+      "is_custom_mode_supported",
+      "is_collect_dust_mode_supported",
+      "is_support_water_mode",
+      "is_ai_recognition_setting_supported",
+      "is_ai_recognition_obstacle_supported",
+      "is_pure_clean_mop_supported",
+      "is_max_plus_mode_supported",
+      "is_clean_route_setting_supported",
+      "is_customized_clean_supported"
+    ],
+    "a159": [
+      "is_custom_mode_supported",
+      "is_collect_dust_mode_supported",
+      "is_support_water_mode",
+      "is_ai_recognition_setting_supported",
+      "is_ai_recognition_obstacle_supported",
+      "is_pure_clean_mop_supported",
+      "is_max_plus_mode_supported",
+      "is_clean_route_setting_supported",
+      "is_customized_clean_supported"
+    ],
+    "a167": [
+      "is_custom_mode_supported",
+      "is_collect_dust_mode_supported",
+      "is_support_water_mode",
+      "is_ai_recognition_setting_supported",
+      "is_ai_recognition_obstacle_supported",
+      "is_pure_clean_mop_supported",
+      "is_max_plus_mode_supported",
+      "is_clean_route_setting_supported",
+      "is_customized_clean_supported"
+    ],
+    "a168": [
+      "is_custom_mode_supported",
+      "is_collect_dust_mode_supported",
+      "is_support_water_mode",
+      "is_ai_recognition_setting_supported",
+      "is_ai_recognition_obstacle_supported",
+      "is_pure_clean_mop_supported",
+      "is_max_plus_mode_supported",
+      "is_clean_route_setting_supported",
+      "is_customized_clean_supported"
+    ],
+    "a169": [
+      "is_custom_mode_supported",
+      "is_collect_dust_mode_supported",
+      "is_support_water_mode",
+      "is_ai_recognition_setting_supported",
+      "is_ai_recognition_obstacle_supported",
+      "is_pure_clean_mop_supported",
+      "is_max_plus_mode_supported",
+      "is_clean_route_setting_supported",
+      "is_customized_clean_supported"
+    ],
+    "a170": [
+      "is_custom_mode_supported",
+      "is_collect_dust_mode_supported",
+      "is_support_water_mode",
+      "is_ai_recognition_setting_supported",
+      "is_ai_recognition_obstacle_supported",
+      "is_pure_clean_mop_supported",
+      "is_max_plus_mode_supported",
+      "is_clean_route_setting_supported",
+      "is_customized_clean_supported"
+    ],
+    "a19": [
+      "is_custom_mode_supported",
+      "is_collect_dust_mode_supported"
+    ],
+    "a20": [
+      "is_custom_mode_supported",
+      "is_collect_dust_mode_supported",
+      "is_support_water_mode",
+      "is_ai_recognition_setting_supported",
+      "is_ai_recognition_obstacle_supported",
+      "is_pure_clean_mop_supported",
+      "is_new_remote_view_supported",
+      "is_max_plus_mode_supported",
+      "is_clean_route_setting_supported",
+      "is_customized_clean_supported"
+    ],
+    "a21": [
+      "is_custom_mode_supported",
+      "is_collect_dust_mode_supported",
+      "is_support_water_mode",
+      "is_ai_recognition_setting_supported",
+      "is_ai_recognition_obstacle_supported",
+      "is_pure_clean_mop_supported",
+      "is_new_remote_view_supported",
+      "is_max_plus_mode_supported",
+      "is_clean_route_setting_supported",
+      "is_customized_clean_supported"
+    ],
+    "a23": [
+      "is_mop_forbidden_supported",
+      "is_custom_mode_supported",
+      "is_show_general_obstacle_supported",
+      "is_show_obstacle_photo_supported",
+      "is_collect_dust_mode_supported",
+      "is_support_water_mode",
+      "is_ai_recognition_setting_supported",
+      "is_ai_recognition_obstacle_supported",
+      "is_pure_clean_mop_supported",
+      "is_new_remote_view_supported",
+      "is_clean_route_setting_supported",
+      "is_mop_shake_module_supported",
+      "is_customized_clean_supported"
+    ],
+    "a24": [
+      "is_mop_forbidden_supported",
+      "is_custom_mode_supported",
+      "is_show_general_obstacle_supported",
+      "is_show_obstacle_photo_supported",
+      "is_collect_dust_mode_supported",
+      "is_support_water_mode",
+      "is_ai_recognition_setting_supported",
+      "is_ai_recognition_obstacle_supported",
+      "is_pure_clean_mop_supported",
+      "is_new_remote_view_supported",
+      "is_clean_route_setting_supported",
+      "is_mop_shake_module_supported",
+      "is_customized_clean_supported"
+    ],
+    "a26": [
+      "is_mop_forbidden_supported",
+      "is_custom_mode_supported",
+      "is_collect_dust_mode_supported",
+      "is_support_water_mode",
+      "is_ai_recognition_setting_supported",
+      "is_ai_recognition_obstacle_supported",
+      "is_pure_clean_mop_supported",
+      "is_new_remote_view_supported",
+      "is_max_plus_mode_supported",
+      "is_clean_route_setting_supported",
+      "is_mop_shake_module_supported",
+      "is_customized_clean_supported"
+    ],
+    "a27": [
+      "is_mop_forbidden_supported",
+      "is_custom_mode_supported",
+      "is_collect_dust_mode_supported",
+      "is_support_water_mode",
+      "is_ai_recognition_setting_supported",
+      "is_ai_recognition_obstacle_supported",
+      "is_pure_clean_mop_supported",
+      "is_new_remote_view_supported",
+      "is_max_plus_mode_supported",
+      "is_clean_route_setting_supported",
+      "is_mop_shake_module_supported",
+      "is_customized_clean_supported"
+    ],
+    "a29": [
+      "is_custom_mode_supported",
+      "is_collect_dust_mode_supported",
+      "is_support_water_mode",
+      "is_pure_clean_mop_supported",
+      "is_new_remote_view_supported",
+      "is_clean_route_setting_supported",
+      "is_mop_shake_module_supported",
+      "is_customized_clean_supported"
+    ],
+    "a30": [
+      "is_custom_mode_supported",
+      "is_collect_dust_mode_supported",
+      "is_support_water_mode",
+      "is_pure_clean_mop_supported",
+      "is_new_remote_view_supported",
+      "is_clean_route_setting_supported",
+      "is_mop_shake_module_supported",
+      "is_customized_clean_supported"
+    ],
+    "a33": [
+      "is_custom_mode_supported",
+      "is_collect_dust_mode_supported"
+    ],
+    "a34": [
+      "is_custom_mode_supported",
+      "is_collect_dust_mode_supported"
+    ],
+    "a37": [
+      "is_mop_forbidden_supported",
+      "is_custom_mode_supported",
+      "is_collect_dust_mode_supported",
+      "is_support_water_mode"
+    ],
+    "a38": [
+      "is_mop_forbidden_supported",
+      "is_custom_mode_supported",
+      "is_collect_dust_mode_supported",
+      "is_support_water_mode"
+    ],
+    "a39": [
+      "is_custom_mode_supported",
+      "is_collect_dust_mode_supported"
+    ],
+    "a40": [
+      "is_custom_mode_supported",
+      "is_collect_dust_mode_supported"
+    ],
+    "a46": [
+      "is_custom_mode_supported",
+      "is_collect_dust_mode_supported",
+      "is_support_water_mode",
+      "is_ai_recognition_setting_supported",
+      "is_ai_recognition_obstacle_supported",
+      "is_pure_clean_mop_supported",
+      "is_new_remote_view_supported",
+      "is_max_plus_mode_supported",
+      "is_clean_route_setting_supported",
+      "is_mop_shake_module_supported",
+      "is_customized_clean_supported"
+    ],
+    "a47": [
+      "is_custom_mode_supported",
+      "is_collect_dust_mode_supported",
+      "is_support_water_mode",
+      "is_ai_recognition_setting_supported",
+      "is_ai_recognition_obstacle_supported",
+      "is_pure_clean_mop_supported",
+      "is_new_remote_view_supported",
+      "is_max_plus_mode_supported",
+      "is_clean_route_setting_supported",
+      "is_mop_shake_module_supported",
+      "is_customized_clean_supported"
+    ],
+    "a50": [
+      "is_mop_forbidden_supported",
+      "is_custom_mode_supported",
+      "is_show_obstacle_photo_supported",
+      "is_collect_dust_mode_supported",
+      "is_support_water_mode",
+      "is_ai_recognition_setting_supported",
+      "is_ai_recognition_obstacle_supported",
+      "is_pure_clean_mop_supported",
+      "is_new_remote_view_supported",
+      "is_max_plus_mode_supported",
+      "is_clean_route_setting_supported",
+      "is_mop_shake_module_supported",
+      "is_customized_clean_supported"
+    ],
+    "a51": [
+      "is_mop_forbidden_supported",
+      "is_custom_mode_supported",
+      "is_show_obstacle_photo_supported",
+      "is_collect_dust_mode_supported",
+      "is_support_water_mode",
+      "is_ai_recognition_setting_supported",
+      "is_ai_recognition_obstacle_supported",
+      "is_pure_clean_mop_supported",
+      "is_new_remote_view_supported",
+      "is_max_plus_mode_supported",
+      "is_clean_route_setting_supported",
+      "is_mop_shake_module_supported",
+      "is_customized_clean_supported"
+    ],
+    "a52": [
+      "is_mop_forbidden_supported",
+      "is_custom_mode_supported",
+      "is_show_obstacle_photo_supported",
+      "is_collect_dust_mode_supported",
+      "is_support_water_mode",
+      "is_ai_recognition_setting_supported",
+      "is_ai_recognition_obstacle_supported",
+      "is_pure_clean_mop_supported",
+      "is_new_remote_view_supported",
+      "is_max_plus_mode_supported",
+      "is_clean_route_setting_supported",
+      "is_mop_shake_module_supported",
+      "is_customized_clean_supported"
+    ],
+    "a62": [
+      "is_custom_mode_supported",
+      "is_collect_dust_mode_supported",
+      "is_support_water_mode",
+      "is_pure_clean_mop_supported",
+      "is_max_plus_mode_supported",
+      "is_clean_route_setting_supported",
+      "is_mop_shake_module_supported",
+      "is_customized_clean_supported"
+    ],
+    "a64": [
+      "is_custom_mode_supported",
+      "is_collect_dust_mode_supported",
+      "is_support_water_mode",
+      "is_ai_recognition_setting_supported",
+      "is_ai_recognition_obstacle_supported",
+      "is_pure_clean_mop_supported",
+      "is_max_plus_mode_supported",
+      "is_clean_route_setting_supported",
+      "is_mop_shake_module_supported",
+      "is_customized_clean_supported"
+    ],
+    "a65": [
+      "is_custom_mode_supported",
+      "is_collect_dust_mode_supported",
+      "is_support_water_mode",
+      "is_ai_recognition_setting_supported",
+      "is_ai_recognition_obstacle_supported",
+      "is_pure_clean_mop_supported",
+      "is_max_plus_mode_supported",
+      "is_clean_route_setting_supported",
+      "is_mop_shake_module_supported",
+      "is_customized_clean_supported"
+    ],
+    "a66": [
+      "is_custom_mode_supported",
+      "is_collect_dust_mode_supported",
+      "is_support_water_mode",
+      "is_ai_recognition_setting_supported",
+      "is_ai_recognition_obstacle_supported",
+      "is_pure_clean_mop_supported",
+      "is_new_remote_view_supported",
+      "is_max_plus_mode_supported",
+      "is_clean_route_setting_supported",
+      "is_mop_shake_module_supported",
+      "is_customized_clean_supported"
+    ],
+    "a68": [
+      "is_custom_mode_supported",
+      "is_collect_dust_mode_supported",
+      "is_support_water_mode",
+      "is_ai_recognition_setting_supported",
+      "is_ai_recognition_obstacle_supported",
+      "is_pure_clean_mop_supported",
+      "is_new_remote_view_supported",
+      "is_max_plus_mode_supported",
+      "is_clean_route_setting_supported",
+      "is_mop_shake_module_supported",
+      "is_customized_clean_supported"
+    ],
+    "a69": [
+      "is_custom_mode_supported",
+      "is_collect_dust_mode_supported",
+      "is_support_water_mode",
+      "is_ai_recognition_setting_supported",
+      "is_ai_recognition_obstacle_supported",
+      "is_pure_clean_mop_supported",
+      "is_new_remote_view_supported",
+      "is_max_plus_mode_supported",
+      "is_clean_route_setting_supported",
+      "is_mop_shake_module_supported",
+      "is_customized_clean_supported"
+    ],
+    "a70": [
+      "is_custom_mode_supported",
+      "is_collect_dust_mode_supported",
+      "is_support_water_mode",
+      "is_ai_recognition_setting_supported",
+      "is_ai_recognition_obstacle_supported",
+      "is_pure_clean_mop_supported",
+      "is_new_remote_view_supported",
+      "is_max_plus_mode_supported",
+      "is_clean_route_setting_supported",
+      "is_mop_shake_module_supported",
+      "is_customized_clean_supported"
+    ],
+    "a72": [
+      "is_custom_mode_supported",
+      "is_collect_dust_mode_supported",
+      "is_none_pure_clean_mop_with_max_plus"
+    ],
+    "a73": [
+      "is_mop_forbidden_supported",
+      "is_custom_mode_supported",
+      "is_support_custom_carpet",
+      "is_rubber_brush_carpet_supported",
+      "is_carpet_pressure_use_origin_paras_supported",
+      "is_collect_dust_mode_supported",
+      "is_support_water_mode",
+      "is_ai_recognition_setting_supported",
+      "is_ai_recognition_obstacle_supported",
+      "is_none_pure_clean_mop_with_max_plus"
+    ],
+    "a74": [
+      "is_mop_forbidden_supported",
+      "is_custom_mode_supported",
+      "is_support_mop_back_pwm_set",
+      "is_support_water_mode",
+      "is_ai_recognition_setting_supported",
+      "is_ai_recognition_obstacle_supported",
+      "is_pure_clean_mop_supported",
+      "is_max_plus_mode_supported",
+      "is_clean_route_setting_supported",
+      "is_customized_clean_supported"
+    ],
+    "a75": [
+      "is_mop_forbidden_supported",
+      "is_custom_mode_supported",
+      "is_support_mop_back_pwm_set",
+      "is_support_water_mode",
+      "is_ai_recognition_setting_supported",
+      "is_ai_recognition_obstacle_supported",
+      "is_pure_clean_mop_supported",
+      "is_max_plus_mode_supported",
+      "is_clean_route_setting_supported",
+      "is_customized_clean_supported"
+    ],
+    "a76": [
+      "is_custom_mode_supported",
+      "is_collect_dust_mode_supported",
+      "is_support_water_mode",
+      "is_pure_clean_mop_supported",
+      "is_new_remote_view_supported",
+      "is_clean_route_setting_supported",
+      "is_mop_shake_module_supported",
+      "is_customized_clean_supported"
+    ],
+    "a84": [
+      "is_custom_mode_supported",
+      "is_collect_dust_mode_supported",
+      "is_none_pure_clean_mop_with_max_plus"
+    ],
+    "a85": [
+      "is_mop_forbidden_supported",
+      "is_custom_mode_supported",
+      "is_support_custom_carpet",
+      "is_rubber_brush_carpet_supported",
+      "is_carpet_pressure_use_origin_paras_supported",
+      "is_collect_dust_mode_supported",
+      "is_support_water_mode",
+      "is_ai_recognition_setting_supported",
+      "is_ai_recognition_obstacle_supported",
+      "is_none_pure_clean_mop_with_max_plus"
+    ],
+    "a86": [
+      "is_custom_mode_supported",
+      "is_collect_dust_mode_supported",
+      "is_support_water_mode",
+      "is_ai_recognition_setting_supported",
+      "is_ai_recognition_obstacle_supported",
+      "is_pure_clean_mop_supported",
+      "is_new_remote_view_supported",
+      "is_max_plus_mode_supported",
+      "is_clean_route_setting_supported",
+      "is_customized_clean_supported"
+    ],
+    "a87": [
+      "is_custom_mode_supported",
+      "is_collect_dust_mode_supported",
+      "is_support_water_mode",
+      "is_ai_recognition_setting_supported",
+      "is_ai_recognition_obstacle_supported",
+      "is_pure_clean_mop_supported",
+      "is_new_remote_view_supported",
+      "is_max_plus_mode_supported",
+      "is_clean_route_setting_supported",
+      "is_customized_clean_supported"
+    ],
+    "a94": [
+      "is_custom_mode_supported",
+      "is_collect_dust_mode_supported",
+      "is_support_water_mode",
+      "is_ai_recognition_setting_supported",
+      "is_ai_recognition_obstacle_supported",
+      "is_pure_clean_mop_supported",
+      "is_new_remote_view_supported",
+      "is_max_plus_mode_supported",
+      "is_clean_route_setting_supported",
+      "is_mop_shake_module_supported",
+      "is_customized_clean_supported"
+    ],
+    "a95": [
+      "is_custom_mode_supported",
+      "is_collect_dust_mode_supported",
+      "is_support_water_mode",
+      "is_ai_recognition_setting_supported",
+      "is_ai_recognition_obstacle_supported",
+      "is_pure_clean_mop_supported",
+      "is_new_remote_view_supported",
+      "is_max_plus_mode_supported",
+      "is_clean_route_setting_supported",
+      "is_mop_shake_module_supported",
+      "is_customized_clean_supported"
+    ],
+    "a96": [
+      "is_custom_mode_supported",
+      "is_collect_dust_mode_supported",
+      "is_support_water_mode",
+      "is_ai_recognition_setting_supported",
+      "is_ai_recognition_obstacle_supported",
+      "is_pure_clean_mop_supported",
+      "is_new_remote_view_supported",
+      "is_max_plus_mode_supported",
+      "is_clean_route_setting_supported",
+      "is_mop_shake_module_supported",
+      "is_customized_clean_supported"
+    ],
+    "a97": [
+      "is_custom_mode_supported",
+      "is_collect_dust_mode_supported",
+      "is_support_water_mode",
+      "is_ai_recognition_setting_supported",
+      "is_ai_recognition_obstacle_supported",
+      "is_pure_clean_mop_supported",
+      "is_new_remote_view_supported",
+      "is_max_plus_mode_supported",
+      "is_clean_route_setting_supported",
+      "is_mop_shake_module_supported",
+      "is_customized_clean_supported"
+    ],
+    "p5": [
+      "is_custom_mode_supported",
+      "is_collect_dust_mode_supported"
+    ],
+    "p6": [
+      "is_mop_forbidden_supported",
+      "is_custom_mode_supported",
+      "is_collect_dust_mode_supported",
+      "is_support_water_mode"
+    ],
+    "s4": [
+      "is_custom_mode_supported",
+      "is_collect_dust_mode_supported"
+    ],
+    "s5e": [
+      "is_mop_forbidden_supported",
+      "is_custom_mode_supported",
+      "is_collect_dust_mode_supported",
+      "is_support_water_mode"
+    ],
+    "s6": [
+      "is_mop_forbidden_supported",
+      "is_soft_clean_mode_supported",
+      "is_collect_dust_mode_supported",
+      "is_new_remote_view_supported"
+    ],
+    "t4": [
+      "is_custom_mode_supported",
+      "is_collect_dust_mode_supported"
+    ],
+    "t6": [
+      "is_mop_forbidden_supported",
+      "is_soft_clean_mode_supported",
+      "is_collect_dust_mode_supported",
+      "is_new_remote_view_supported"
+    ],
+    "t7": [
+      "is_mop_forbidden_supported",
+      "is_soft_clean_mode_supported",
+      "is_custom_mode_supported",
+      "is_collect_dust_mode_supported",
+      "is_support_water_mode",
+      "is_new_remote_view_supported"
+    ],
+    "t7p": [
+      "is_mop_forbidden_supported",
+      "is_soft_clean_mode_supported",
+      "is_custom_mode_supported",
+      "is_collect_dust_mode_supported",
+      "is_support_water_mode",
+      "is_ai_recognition_setting_supported",
+      "is_ai_recognition_obstacle_supported",
+      "is_new_remote_view_supported"
+    ]
+  },
+  "rules": {
+    "is_activate_video_charging_and_standby_supported": {
+      "mask": "9444732965739290427392",
+      "source": "new_feature_info_str"
+    },
+    "is_analysis_supported": {
+      "id": 124,
+      "source": "feature_info"
+    },
+    "is_any_state_transit_goto_supported": {
+      "mask": "16",
+      "source": "new_feature_info"
+    },
+    "is_auto_collection_2_supported": {
+      "mask": "9007199254740992",
+      "source": "new_feature_info_str"
+    },
+    "is_auto_delivery_field_in_global_status_supported": {
+      "mask": "34359738368",
+      "source": "new_feature_info_str"
+    },
+    "is_auto_tear_down_mop_supported": {
+      "mask": "1208925819614629174706176",
+      "source": "new_feature_info_str"
+    },
+    "is_avoid_collision_mode_supported": {
+      "mask": "68719476736",
+      "source": "new_feature_info_str"
+    },
+    "is_avoid_collision_supported": {
+      "mask": "134217728",
+      "source": "new_feature_info"
+    },
+    "is_back_charge_auto_wash_supported": {
+      "mask": "4096",
+      "source": "new_feature_info_str"
+    },
+    "is_back_wash_new_smart_supported": {
+      "mask": "649037107316853453566312041152512",
+      "source": "new_feature_info_str"
+    },
+    "is_careful_slow_mop_supported": {
+      "mask": "2199023255552",
+      "source": "new_feature_info"
+    },
+    "is_carpet_custom_clean_supported": {
+      "mask": "562949953421312",
+      "source": "new_feature_info_str"
+    },
+    "is_carpet_deep_clean_supported": {
+      "mask": "8",
+      "source": "new_feature_info_str"
+    },
+    "is_carpet_long_haired_ex_supported": {
+      "mask": "10384593717069655257060992658440192",
+      "source": "new_feature_info_str"
+    },
+    "is_carpet_long_haired_supported": {
+      "mask": "37778931862957161709568",
+      "source": "new_feature_info_str"
+    },
+    "is_carpet_shape_type_supported": {
+      "mask": "664613997892457936451903530140172288",
+      "source": "new_feature_info_str"
+    },
+    "is_carpet_show_on_map": {
+      "mask": "17592186044416",
+      "source": "new_feature_info"
+    },
+    "is_carpet_supported": {
+      "mask": "512",
+      "source": "new_feature_info"
+    },
+    "is_ces_2022_supported": {
+      "mask": "65536",
+      "source": "new_feature_info_str"
+    },
+    "is_clean_count_setting_supported": {
+      "mask": "1073741824",
+      "source": "new_feature_info_str"
+    },
+    "is_clean_direct_status_supported": {
+      "mask": "1180591620717411303424",
+      "source": "new_feature_info_str"
+    },
+    "is_clean_efficiency_supported": {
+      "mask": "324518553658426726783156020576256",
+      "source": "new_feature_info_str"
+    },
+    "is_clean_fluid_delivery_supported": {
+      "mask": "5192296858534827628530496329220096",
+      "source": "new_feature_info_str"
+    },
+    "is_clean_history_time_line_supported": {
+      "mask": "75557863725914323419136",
+      "source": "new_feature_info_str"
+    },
+    "is_clean_route_deep_slow_plus_supported": {
+      "mask": "16777216",
+      "source": "new_feature_info_str"
+    },
+    "is_clean_route_fast_mode_supported": {
+      "mask": "256",
+      "source": "new_feature_info_str"
+    },
+    "is_clean_then_mop_mode_supported": {
+      "mask": "9903520314283042199192993792",
+      "source": "new_feature_info_str"
+    },
+    "is_clean_time_line_supported": {
+      "mask": "2475880078570760549798248448",
+      "source": "new_feature_info_str"
+    },
+    "is_collect_dust_count_show_supported": {
+      "mask": "1267650600228229401496703205376",
+      "source": "new_feature_info_str"
+    },
+    "is_corner_clean_mode_supported": {
+      "mask": "2147483648",
+      "source": "new_feature_info_str"
+    },
+    "is_corner_mop_stretch_supported": {
+      "mask": "1099511627776",
+      "source": "new_feature_info_str"
+    },
+    "is_ctm_with_repeat_supported": {
+      "mask": "5070602400912917605986812821504",
+      "source": "new_feature_info_str"
+    },
+    "is_current_map_restore_enabled": {
+      "mask": "8192",
+      "source": "new_feature_info"
+    },
+    "is_custom_clean_mode_count_supported": {
+      "mask": "2251799813685248",
+      "source": "new_feature_info_str"
+    },
+    "is_custom_water_box_distance_supported": {
+      "mask": "2147483648",
+      "source": "new_feature_info"
+    },
+    "is_detect_wire_carpet_supported": {
+      "mask": "40564819207303340847894502572032",
+      "source": "new_feature_info_str"
+    },
+    "is_dirty_object_detect_supported": {
+      "mask": "72057594037927936",
+      "source": "new_feature_info_str"
+    },
+    "is_dirty_replenish_clean_supported": {
+      "mask": "17179869184",
+      "source": "new_feature_info_str"
+    },
+    "is_dry_interval_timer_supported": {
+      "mask": "9671406556917033397649408",
+      "source": "new_feature_info_str"
+    },
+    "is_dss_believable": {
+      "mask": "131072",
+      "source": "new_feature_info_str"
+    },
+    "is_dual_band_wi_fi_supported": {
+      "mask": "1298074214633706907132624082305024",
+      "source": "new_feature_info_str"
+    },
+    "is_dust_collection_setting_supported": {
+      "mask": "33554432",
+      "source": "new_feature_info"
+    },
+    "is_dynamically_add_clean_zones_supported": {
+      "mask": "67108864",
+      "source": "new_feature_info_str"
+    },
+    "is_dynamically_skip_clean_zone_supported": {
+      "mask": "33554432",
+      "source": "new_feature_info_str"
+    },
+    "is_egg_dance_mode_supported": {
+      "mask": "154742504910672534362390528",
+      "source": "new_feature_info_str"
+    },
+    "is_egg_mode_supported_from_new_features": {
+      "mask": "4398046511104",
+      "source": "new_feature_info"
+    },
+    "is_exact_custom_mode_supported": {
+      "mask": "140737488355328",
+      "source": "new_feature_info_str"
+    },
+    "is_exhibition_function_supported": {
+      "mask": "302231454903657293676544",
+      "source": "new_feature_info_str"
+    },
+    "is_floor_dir_clean_any_time_supported": {
+      "mask": "4398046511104",
+      "source": "new_feature_info_str"
+    },
+    "is_flow_led_setting_supported": {
+      "mask": "16777216",
+      "source": "new_feature_info"
+    },
+    "is_follow_low_obs_supported": {
+      "mask": "166153499473114484112975882535043072",
+      "source": "new_feature_info_str"
+    },
+    "is_full_duples_switch_supported": {
+      "mask": "41538374868278621028243970633760768",
+      "source": "new_feature_info_str"
+    },
+    "is_fw_filter_obstacle_supported": {
+      "mask": "32",
+      "source": "new_feature_info"
+    },
+    "is_gap_deep_clean_supported": {
+      "mask": "9223372036854775808",
+      "source": "new_feature_info_str"
+    },
+    "is_goto_pure_clean_path_supported": {
+      "mask": "524288",
+      "source": "new_feature_info_str"
+    },
+    "is_hot_wash_towel_supported": {
+      "mask": "2199023255552",
+      "source": "new_feature_info_str"
+    },
+    "is_identify_room_supported": {
+      "mask": "73786976294838206464",
+      "source": "new_feature_info_str"
+    },
+    "is_ignore_unknown_map_object_supported": {
+      "mask": "128",
+      "source": "new_feature_info"
+    },
+    "is_lds_lifting_supported": {
+      "mask": "604462909807314587353088",
+      "source": "new_feature_info_str"
+    },
+    "is_led_status_switch_supported": {
+      "id": 119,
+      "source": "feature_info"
+    },
+    "is_left_water_drain_supported": {
+      "mask": "134217728",
+      "source": "new_feature_info_str"
+    },
+    "is_low_area_access_supported": {
+      "mask": "83076749736557242056487941267521536",
+      "source": "new_feature_info_str"
+    },
+    "is_main_brush_up_down_supported_from_str": {
+      "mask": "262144",
+      "source": "new_feature_info_str"
+    },
+    "is_map_beautify_internal_debug_supported": {
+      "mask": "2097152",
+      "source": "new_feature_info"
+    },
+    "is_map_carpet_add_support": {
+      "mask": "1073741824",
+      "source": "new_feature_info"
+    },
+    "is_map_eraser_supported": {
+      "mask": "2361183241434822606848",
+      "source": "new_feature_info_str"
+    },
+    "is_matter_supported": {
+      "mask": "147573952589676412928",
+      "source": "new_feature_info_str"
+    },
+    "is_max_zone_opened_supported": {
+      "mask": "151115727451828646838272",
+      "source": "new_feature_info_str"
+    },
+    "is_mechanical_arm_mode_supported": {
+      "mask": "618970019642690137449562112",
+      "source": "new_feature_info_str"
+    },
+    "is_midway_back_to_dock_supported": {
+      "mask": "38685626227668133590597632",
+      "source": "new_feature_info_str"
+    },
+    "is_min_battery_15_to_clean_task_supported": {
+      "mask": "4611686018427387904",
+      "source": "new_feature_info_str"
+    },
+    "is_mop_path_supported": {
+      "mask": "2048",
+      "source": "new_feature_info"
+    },
+    "is_mop_shake_water_max_supported": {
+      "mask": "35184372088832",
+      "source": "new_feature_info_str"
+    },
+    "is_multi_floor_supported": {
+      "id": 120,
+      "source": "feature_info"
+    },
+    "is_multi_map_segment_timer_supported": {
+      "mask": "4096",
+      "source": "new_feature_info"
+    },
+    "is_new_ai_recognition_supported": {
+      "mask": "4503599627370496",
+      "source": "new_feature_info_str"
+    },
+    "is_new_data_for_clean_history": {
+      "mask": "4194304",
+      "source": "new_feature_info"
+    },
+    "is_new_data_for_clean_history_detail": {
+      "mask": "8388608",
+      "source": "new_feature_info"
+    },
+    "is_new_endpoint_supported": {
+      "mask": "274877906944",
+      "source": "new_feature_info_str"
+    },
+    "is_no_need_carpet_press_set_supported": {
+      "mask": "144115188075855872",
+      "source": "new_feature_info_str"
+    },
+    "is_object_detect_check_supported": {
+      "mask": "18446744073709551616",
+      "source": "new_feature_info_str"
+    },
+    "is_offline_map_supported": {
+      "mask": "16384",
+      "source": "new_feature_info_str"
+    },
+    "is_optimize_battery_supported": {
+      "mask": "4722366482869645213696",
+      "source": "new_feature_info_str"
+    },
+    "is_order_clean_supported": {
+      "id": 123,
+      "source": "feature_info"
+    },
+    "is_over_sea_ctm_supported": {
+      "mask": "20769187434139310514121985316880384",
+      "source": "new_feature_info_str"
+    },
+    "is_pet_snapshot_supported": {
+      "mask": "1125899906842624",
+      "source": "new_feature_info_str"
+    },
+    "is_pet_supplies_deep_clean_supported": {
+      "mask": "8796093022208",
+      "source": "new_feature_info_str"
+    },
+    "is_program_mode_supported": {
+      "mask": "2596148429267413814265248164610048",
+      "source": "new_feature_info_str"
+    },
+    "is_pumping_water_supported": {
+      "mask": "549755813888",
+      "source": "new_feature_info_str"
+    },
+    "is_re_segment_supported": {
+      "mask": "4",
+      "source": "new_feature_info"
+    },
+    "is_record_allowed": {
+      "mask": "1024",
+      "source": "new_feature_info"
+    },
+    "is_remote_supported": {
+      "id": 125,
+      "source": "feature_info"
+    },
+    "is_right_brush_stretch_supported": {
+      "mask": "18014398509481984",
+      "source": "new_feature_info_str"
+    },
+    "is_roller_mop_supported": {
+      "mask": "340282366920938463463374607431768211456",
+      "source": "new_feature_info_str"
+    },
+    "is_room_name_supported": {
+      "mask": "16384",
+      "source": "new_feature_info"
+    },
+    "is_rpc_retry_supported": {
+      "mask": "67108864",
+      "source": "new_feature_info"
+    },
+    "is_set_child_supported": {
+      "mask": "256",
+      "source": "new_feature_info"
+    },
+    "is_setting_carpet_first_supported": {
+      "mask": "8388608",
+      "source": "new_feature_info_str"
+    },
+    "is_shake_mop_set_supported": {
+      "mask": "262144",
+      "source": "new_feature_info"
+    },
+    "is_should_show_arm_over_load_supported": {
+      "mask": "633825300114114700748351602688",
+      "source": "new_feature_info_str"
+    },
+    "is_show_clean_finish_reason_supported": {
+      "mask": "1",
+      "source": "new_feature_info"
+    },
+    "is_side_brush_lift_carpet_supported": {
+      "mask": "20282409603651670423947251286016",
+      "source": "new_feature_info_str"
+    },
+    "is_small_side_mop_supported": {
+      "mask": "2417851639229258349412352",
+      "source": "new_feature_info_str"
+    },
+    "is_smart_clean_mode_set_supported": {
+      "mask": "36028797018963968",
+      "source": "new_feature_info_str"
+    },
+    "is_soak_and_wash_supported": {
+      "mask": "162259276829213363391578010288128",
+      "source": "new_feature_info_str"
+    },
+    "is_sr_map_supported": {
+      "mask": "1329227995784915872903807060280344576",
+      "source": "new_feature_info_str"
+    },
+    "is_super_deep_wash_supported": {
+      "mask": "32768",
+      "source": "new_feature_info_str"
+    },
+    "is_support_api_app_stop_grasp_supported": {
+      "mask": "2535301200456458802993406410752",
+      "source": "new_feature_info_str"
+    },
+    "is_support_backup_map": {
+      "mask": "562949953421312",
+      "source": "new_feature_info"
+    },
+    "is_support_clean_estimate": {
+      "mask": "2",
+      "source": "new_feature_info_str"
+    },
+    "is_support_cliff_zone": {
+      "mask": "512",
+      "source": "new_feature_info_str"
+    },
+    "is_support_custom_dnd": {
+      "mask": "4",
+      "source": "new_feature_info_str"
+    },
+    "is_support_custom_door_sill": {
+      "mask": "32",
+      "source": "new_feature_info_str"
+    },
+    "is_support_custom_mode_in_cleaning": {
+      "mask": "1125899906842624",
+      "source": "new_feature_info"
+    },
+    "is_support_fetch_timer_summary": {
+      "id": 122,
+      "source": "feature_info"
+    },
+    "is_support_floor_direction": {
+      "mask": "2048",
+      "source": "new_feature_info_str"
+    },
+    "is_support_floor_edit": {
+      "mask": "34359738368",
+      "source": "new_feature_info"
+    },
+    "is_support_furniture": {
+      "mask": "68719476736",
+      "source": "new_feature_info"
+    },
+    "is_support_get_particular_status_supported": {
+      "mask": "79228162514264337593543950336",
+      "source": "new_feature_info_str"
+    },
+    "is_support_incremental_map": {
+      "mask": "4194304",
+      "source": "new_feature_info_str"
+    },
+    "is_support_main_brush_up_down_supported": {
+      "mask": "77371252455336267181195264",
+      "source": "new_feature_info_str"
+    },
+    "is_support_quick_map_builder": {
+      "mask": "549755813888",
+      "source": "new_feature_info"
+    },
+    "is_support_remote_control_in_call": {
+      "mask": "2251799813685248",
+      "source": "new_feature_info"
+    },
+    "is_support_room_tag": {
+      "mask": "274877906944",
+      "source": "new_feature_info"
+    },
+    "is_support_set_switch_map_mode": {
+      "mask": "268435456",
+      "source": "new_feature_info"
+    },
+    "is_support_set_volume_in_call": {
+      "mask": "1",
+      "source": "new_feature_info_str"
+    },
+    "is_support_side_brush_up_down_supported": {
+      "mask": "4835703278458516698824704",
+      "source": "new_feature_info_str"
+    },
+    "is_support_smart_door_sill": {
+      "mask": "1024",
+      "source": "new_feature_info_str"
+    },
+    "is_support_smart_global_clean_with_custom_mode": {
+      "mask": "1099511627776",
+      "source": "new_feature_info"
+    },
+    "is_support_smart_scene": {
+      "mask": "8589934592",
+      "source": "new_feature_info"
+    },
+    "is_support_stuck_zone": {
+      "mask": "16",
+      "source": "new_feature_info_str"
+    },
+    "is_support_voice_control_debug": {
+      "id": 130,
+      "source": "feature_info"
+    },
+    "is_supported_download_test_voice": {
+      "mask": "281474976710656",
+      "source": "new_feature_info"
+    },
+    "is_supported_drying": {
+      "mask": "140737488355328",
+      "source": "new_feature_info"
+    },
+    "is_supported_valley_electricity": {
+      "mask": "35184372088832",
+      "source": "new_feature_info"
+    },
+    "is_sync_server_name_supported": {
+      "mask": "316912650057057350374175801344",
+      "source": "new_feature_info_str"
+    },
+    "is_three_d_mapping_inner_test_supported": {
+      "mask": "158456325028528675187087900672",
+      "source": "new_feature_info_str"
+    },
+    "is_tidyup_zones_supported": {
+      "mask": "618970019642690137449562112",
+      "source": "new_feature_info_str"
+    },
+    "is_two_gears_no_collision_supported": {
+      "mask": "332306998946228968225951765070086144",
+      "source": "new_feature_info_str"
+    },
+    "is_two_key_real_time_video_supported": {
+      "mask": "4294967296",
+      "source": "new_feature_info_str"
+    },
+    "is_two_key_rtv_in_charging_supported": {
+      "mask": "8589934592",
+      "source": "new_feature_info_str"
+    },
+    "is_type_identify_supported": {
+      "mask": "19807040628566084398385987584",
+      "source": "new_feature_info_str"
+    },
+    "is_unsave_map_reason_supported": {
+      "mask": "70368744177664",
+      "source": "new_feature_info"
+    },
+    "is_uvc_sterilize_supported": {
+      "mask": "19342813113834066795298816",
+      "source": "new_feature_info_str"
+    },
+    "is_video_monitor_supported": {
+      "mask": "8",
+      "source": "new_feature_info"
+    },
+    "is_video_patrol_supported": {
+      "mask": "281474976710656",
+      "source": "new_feature_info_str"
+    },
+    "is_video_setting_supported": {
+      "mask": "64",
+      "source": "new_feature_info"
+    },
+    "is_voice_control_led_supported": {
+      "mask": "288230376151711744",
+      "source": "new_feature_info_str"
+    },
+    "is_voice_control_supported": {
+      "mask": "137438953472",
+      "source": "new_feature_info_str"
+    },
+    "is_wash_then_charge_cmd_supported": {
+      "mask": "137438953472",
+      "source": "new_feature_info"
+    },
+    "is_water_leak_check_supported": {
+      "mask": "1152921504606846976",
+      "source": "new_feature_info_str"
+    },
+    "is_water_slide_mode_supported": {
+      "mask": "81129638414606681695789005144064",
+      "source": "new_feature_info_str"
+    },
+    "is_water_up_down_drain_supported": {
+      "mask": "1048576",
+      "source": "new_feature_info_str"
+    },
+    "is_wifi_manage_supported": {
+      "mask": "128",
+      "source": "new_feature_info_str"
+    },
+    "is_workday_holiday_supported": {
+      "mask": "590295810358705651712",
+      "source": "new_feature_info_str"
+    }
+  },
+  "start_types": {
+    "1": "button",
+    "101": "routines",
+    "13": "voice_control",
+    "2": "app",
+    "3": "schedule",
+    "4": "mi_home",
+    "5": "quick_start",
+    "801": "alexa",
+    "802": "google",
+    "803": "ifttt",
+    "804": "yandex",
+    "805": "homekit",
+    "806": "xiaoai",
+    "807": "tmall_genie",
+    "808": "duer",
+    "809": "dingdong",
+    "810": "siri",
+    "811": "clova",
+    "820": "widget_launch",
+    "821": "smart_watch",
+    "901": "wechat",
+    "902": "alipay",
+    "903": "aqara",
+    "904": "hisense",
+    "905": "huawei"
+  }
+}

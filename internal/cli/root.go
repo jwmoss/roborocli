@@ -141,6 +141,13 @@ func newRootCommand(rc *runtime) *cobra.Command {
 	root.AddCommand(newControlCommand(rc))
 	root.AddCommand(newCommandCommand(rc))
 	root.AddCommand(newRawCommand(rc))
+	root.AddCommand(newCapabilitiesCommand(rc))
+	root.AddCommand(newDockCommand(rc))
+	root.AddCommand(newRoutinesCommand(rc))
+	root.AddCommand(newHistoryCommand(rc))
+	root.AddCommand(newWatchCommand(rc))
+	root.AddCommand(newMapsCommand(rc))
+	root.AddCommand(newDatapointsCommand(rc))
 	root.AddCommand(newCompletionCommand(root))
 
 	return root

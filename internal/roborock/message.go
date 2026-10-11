@@ -1,14 +1,7 @@
 // Package roborock implements the Roborock device protocols: the local TCP
 // protocol on port 58867, the MQTT control protocol, and the cloud REST API.
 //
-// The wire format and crypto derive from two sources:
-//   - The Roborock Android app 4.74.08 (com.roborock.smart), decompiled with
-//     REA/jadx: MqttWireFrame (version, seq, random, timestamp, protocol,
-//     payload length, payload, CRC32), LocalClientService (tcp://host:58867),
-//     and the Hawk auth interceptor.
-//   - python-roborock (the library behind the Home Assistant integration),
-//     which documents the AES key derivation for protocol versions 1.0 and
-//     L01 and the full RPC payload shape.
+// See docs/protocol.md for framing, encryption, and live protocol evidence.
 package roborock
 
 import (
@@ -209,7 +202,16 @@ func encryptPayload(m *Message, keys codecKeys) ([]byte, error) {
 	switch m.Version {
 	case VersionL01:
 		return encryptL01(m.Payload, keys, m)
-	case VersionV1, "A01":
+	case "A01", "B01":
+		block, iv, err := familyCipher(m, keys.localKey)
+		if err != nil {
+			return nil, err
+		}
+		plain := pkcs7Pad(m.Payload, aes.BlockSize)
+		out := make([]byte, len(plain))
+		cipher.NewCBCEncrypter(block, iv).CryptBlocks(out, plain)
+		return out, nil
+	case VersionV1:
 		return encryptV1(m.Payload, m.Timestamp, keys.localKey)
 	default:
 		return nil, fmt.Errorf("unsupported protocol version %q", m.Version)
@@ -221,11 +223,32 @@ func decryptPayload(payload []byte, keys codecKeys, m *Message) ([]byte, error) 
 	switch m.Version {
 	case VersionL01:
 		return decryptL01(payload, keys, m)
-	case VersionV1, "A01":
+	case "A01", "B01":
+		if len(payload) == 0 || len(payload)%aes.BlockSize != 0 {
+			return nil, errors.New("ciphertext is not block aligned")
+		}
+		block, iv, err := familyCipher(m, keys.localKey)
+		if err != nil {
+			return nil, err
+		}
+		out := make([]byte, len(payload))
+		cipher.NewCBCDecrypter(block, iv).CryptBlocks(out, payload)
+		return pkcs7Unpad(out, aes.BlockSize)
+	case VersionV1:
 		return decryptV1(payload, m.Timestamp, keys.localKey)
 	default:
 		return nil, fmt.Errorf("unsupported protocol version %q", m.Version)
 	}
+}
+
+func familyCipher(m *Message, key string) (cipher.Block, []byte, error) {
+	salt, start := "726f626f726f636b2d67a6d6da", 8
+	if m.Version == "B01" {
+		salt, start = "5wwh9ikChRjASpMU8cxg7o1d2E", 9
+	}
+	iv := []byte(MD5Hex(fmt.Sprintf("%08x", m.Random) + salt)[start : start+16])
+	block, err := aes.NewCipher([]byte(key))
+	return block, iv, err
 }
 
 // EncodeLocalFrame serializes a message as a length-prefixed local TCP frame:
@@ -263,7 +286,11 @@ func EncodeHelloFrame(m *Message, localKey string, connectNonce uint32, withCRC 
 // EncodeMQTTFrame serializes a message as an MQTT payload frame. It is the
 // local frame without the 4-byte length prefix.
 func EncodeMQTTFrame(m *Message, localKey string) ([]byte, error) {
-	return encodeBody(m, codecKeys{localKey: localKey})
+	body, err := encodeBody(m, codecKeys{localKey: localKey})
+	if err != nil {
+		return nil, err
+	}
+	return binary.BigEndian.AppendUint32(body, crc32.ChecksumIEEE(body)), nil
 }
 
 func encodeBody(m *Message, keys codecKeys) ([]byte, error) {
@@ -280,6 +307,9 @@ func encodeBody(m *Message, keys codecKeys) ([]byte, error) {
 		encrypted, err := encryptPayload(m, keys)
 		if err != nil {
 			return nil, fmt.Errorf("encrypt payload: %w", err)
+		}
+		if len(encrypted) > 65535 {
+			return nil, fmt.Errorf("payload exceeds wire length limit")
 		}
 		body = binary.BigEndian.AppendUint16(body, uint16(len(encrypted)))
 		body = append(body, encrypted...)
