@@ -86,7 +86,7 @@ in the config file. Pass `--host` to skip discovery.
 roborocli status                  # state, battery, fan, error, clean totals
 roborocli info                    # device, network, consumables, rooms, history
 roborocli info consumables        # brush, filter, and dock part lifetimes
-roborocli info rooms              # rooms from the device map
+roborocli info rooms              # room ids and names from the device map
 roborocli info network            # IP, SSID, MAC, RSSI
 roborocli info history            # cleaning summary
 roborocli settings                # child lock, LED, carpet, volume, DND, map state
@@ -104,7 +104,8 @@ roborocli control stop
 roborocli control charge          # return to the dock
 roborocli control spot            # spot clean
 roborocli control find            # locate the vacuum
-roborocli control rooms 16 17     # clean specific rooms
+roborocli control rooms 16 17     # clean specific rooms by id
+roborocli control rooms kitchen "dining room" --repeat 2  # or by name
 roborocli control goto 2300 -1200 # drive to a map coordinate in millimeters
 roborocli control fan 103         # set the fan speed
 roborocli control water 203       # set the water box mode

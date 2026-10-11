@@ -1,8 +1,10 @@
 package cli
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -342,40 +344,144 @@ func newRoomsCommand(rc *runtime) *cobra.Command {
 		Args:  usageArgs(cobra.NoArgs),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return rc.withDevice(cmd.Context(), func(session *deviceSession, caller Caller) error {
-				res, err := caller.Call(cmd.Context(), roborock.CmdGetRoomMapping, nil)
+				rooms, err := rc.listRooms(cmd.Context(), caller)
 				if err != nil {
 					return err
 				}
-				var mapping []struct {
-					ID   int64  `json:"id"`
-					Name string `json:"name"`
-				}
-				if err := json.Unmarshal(res, &mapping); err != nil {
-					// Some firmware returns an object keyed by room id.
-					var byID map[string]string
-					if err2 := json.Unmarshal(res, &byID); err2 != nil {
-						return fmt.Errorf("decode rooms: %w", err)
-					}
-					for id, name := range byID {
-						parsed, _ := strconv.ParseInt(id, 10, 64)
-						mapping = append(mapping, struct {
-							ID   int64  `json:"id"`
-							Name string `json:"name"`
-						}{parsed, name})
-					}
-				}
 				if rc.out.IsJSON() {
-					return rc.out.JSON(mapping)
+					return rc.out.JSON(rooms)
 				}
-				rows := make([][]string, 0, len(mapping))
-				for _, room := range mapping {
-					rows = append(rows, []string{strconv.FormatInt(room.ID, 10), room.Name})
+				rows := make([][]string, 0, len(rooms))
+				for _, r := range rooms {
+					rows = append(rows, []string{strconv.FormatInt(r.ID, 10), r.Name})
 				}
 				rc.out.Table([]string{"ID", "NAME"}, rows)
 				return nil
 			})
 		},
 	}
+}
+
+// room is one map segment. NameID keys the room name in the cloud home data.
+type room struct {
+	ID     int64  `json:"id"`
+	Name   string `json:"name"`
+	NameID string `json:"-"`
+}
+
+// listRooms reads the device room mapping and names it from the cached home
+// data. It refreshes the cache once when a room has no cached name.
+func (rc *runtime) listRooms(ctx context.Context, caller Caller) ([]room, error) {
+	res, err := caller.Call(ctx, roborock.CmdGetRoomMapping, nil)
+	if err != nil {
+		return nil, err
+	}
+	rooms, err := parseRoomMapping(res)
+	if err != nil {
+		return nil, err
+	}
+	if !nameRooms(rooms, roomNames(rc.cfg.HomeData)) {
+		home, err := rc.loadHome(ctx, rc.cfg, true)
+		if err != nil {
+			return nil, err
+		}
+		nameRooms(rooms, roomNames(home))
+	}
+	return rooms, nil
+}
+
+// parseRoomMapping accepts the [[id, name_id, tag]] tuple form, the
+// [{"id","name"}] object form, and the {"id": "name"} map form.
+func parseRoomMapping(raw json.RawMessage) ([]room, error) {
+	var tuples [][]any
+	if err := json.Unmarshal(raw, &tuples); err == nil {
+		rooms := make([]room, 0, len(tuples))
+		for _, t := range tuples {
+			if len(t) == 0 {
+				continue
+			}
+			r := room{ID: int64(asInt(t[0]))}
+			if len(t) > 1 {
+				r.NameID = fmt.Sprintf("%v", t[1])
+			}
+			rooms = append(rooms, r)
+		}
+		return rooms, nil
+	}
+	var objects []room
+	if err := json.Unmarshal(raw, &objects); err == nil {
+		return objects, nil
+	}
+	var byID map[string]string
+	if err := json.Unmarshal(raw, &byID); err != nil {
+		return nil, fmt.Errorf("decode rooms: unexpected payload %s", raw)
+	}
+	rooms := make([]room, 0, len(byID))
+	for id, name := range byID {
+		parsed, _ := strconv.ParseInt(id, 10, 64)
+		rooms = append(rooms, room{ID: parsed, Name: name})
+	}
+	sort.Slice(rooms, func(i, j int) bool { return rooms[i].ID < rooms[j].ID })
+	return rooms, nil
+}
+
+func roomNames(home *roborock.HomeData) map[int64]string {
+	names := map[int64]string{}
+	if home != nil {
+		for _, r := range home.Rooms {
+			names[r.ID] = r.Name
+		}
+	}
+	return names
+}
+
+// nameRooms fills room names by NameID and reports whether all were found.
+func nameRooms(rooms []room, names map[int64]string) bool {
+	complete := true
+	for i := range rooms {
+		if rooms[i].NameID == "" {
+			continue
+		}
+		id, _ := strconv.ParseInt(rooms[i].NameID, 10, 64)
+		if id <= 0 {
+			continue // unnamed in the app
+		}
+		if name, ok := names[id]; ok {
+			rooms[i].Name = name
+		} else {
+			complete = false
+		}
+	}
+	return complete
+}
+
+// resolveRooms maps room ids or case-insensitive names to segment ids.
+func resolveRooms(args []string, rooms []room) ([]int64, error) {
+	ids := make([]int64, 0, len(args))
+	for _, arg := range args {
+		if id, err := strconv.ParseInt(arg, 10, 64); err == nil {
+			ids = append(ids, id)
+			continue
+		}
+		found := false
+		for _, r := range rooms {
+			if strings.EqualFold(r.Name, strings.TrimSpace(arg)) {
+				ids = append(ids, r.ID)
+				found = true
+				break
+			}
+		}
+		if !found {
+			return nil, fmt.Errorf("%w: unknown room %q; run: roborocli info rooms", errUsage, arg)
+		}
+	}
+	return ids, nil
+}
+
+// segmentCleanParams builds the app_segment_clean payload that current
+// firmware expects, as python-roborock and Home Assistant send it.
+func segmentCleanParams(ids []int64, repeat int) []any {
+	return []any{map[string]any{"segments": ids, "repeat": repeat}}
 }
 
 func newNetworkCommand(rc *runtime) *cobra.Command {
@@ -524,42 +630,59 @@ func (rc *runtime) runMutating(cmd *cobra.Command, method string, params any, su
 		return fmt.Errorf("dry-run: refusing to send %s", method)
 	}
 	return rc.withDevice(cmd.Context(), func(session *deviceSession, caller Caller) error {
-		res, err := caller.Call(cmd.Context(), method, params)
-		if err != nil {
-			return err
-		}
-		if rc.out.IsJSON() {
-			return rc.out.JSON(map[string]any{
-				"method":    method,
-				"result":    prettyOrRaw(res),
-				"transport": caller.Transport(),
-			})
-		}
-		rc.out.Success(successMsg)
-		if rc.out.IsPlain() {
-			rc.out.Printf("%s\n", method)
-		}
-		return nil
+		return rc.sendMutating(cmd, caller, method, params, successMsg)
 	})
 }
 
+// sendMutating sends the method on an open caller and reports the result.
+func (rc *runtime) sendMutating(cmd *cobra.Command, caller Caller, method string, params any, successMsg string) error {
+	res, err := caller.Call(cmd.Context(), method, params)
+	if err != nil {
+		return err
+	}
+	if rc.out.IsJSON() {
+		return rc.out.JSON(map[string]any{
+			"method":    method,
+			"result":    prettyOrRaw(res),
+			"transport": caller.Transport(),
+		})
+	}
+	rc.out.Success(successMsg)
+	if rc.out.IsPlain() {
+		rc.out.Printf("%s\n", method)
+	}
+	return nil
+}
+
 func newCleanRoomsCommand(rc *runtime) *cobra.Command {
-	return &cobra.Command{
-		Use:   "rooms <id> [id...]",
-		Short: "Clean only the given room ids",
+	var repeat int
+	cmd := &cobra.Command{
+		Use:   "rooms <id|name> [id|name...]",
+		Short: "Clean only the given rooms, by id or name",
 		Args:  usageArgs(cobra.MinimumNArgs(1)),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			ids := make([]int, 0, len(args))
-			for _, arg := range args {
-				value, err := strconv.Atoi(arg)
-				if err != nil {
-					return fmt.Errorf("%w: room id %q is not a number", errUsage, arg)
-				}
-				ids = append(ids, value)
+			if repeat < 1 || repeat > 3 {
+				return fmt.Errorf("%w: --repeat must be 1-3", errUsage)
 			}
-			return rc.runMutating(cmd, roborock.CmdAppSegmentClean, ids, "room cleaning started")
+			if rc.g.dryRun {
+				return fmt.Errorf("dry-run: refusing to send %s", roborock.CmdAppSegmentClean)
+			}
+			return rc.withDevice(cmd.Context(), func(session *deviceSession, caller Caller) error {
+				rooms, err := rc.listRooms(cmd.Context(), caller)
+				if err != nil {
+					return err
+				}
+				ids, err := resolveRooms(args, rooms)
+				if err != nil {
+					return err
+				}
+				return rc.sendMutating(cmd, caller, roborock.CmdAppSegmentClean,
+					segmentCleanParams(ids, repeat), "room cleaning started")
+			})
 		},
 	}
+	cmd.Flags().IntVar(&repeat, "repeat", 1, "cleaning passes per room (1-3)")
+	return cmd
 }
 
 func newGotoCommand(rc *runtime) *cobra.Command {
