@@ -30,13 +30,7 @@ func newDoctorCommand(rc *runtime) *cobra.Command {
 			// 1. Login gateway reachable?
 			gateway := map[string]any{"ok": false}
 			if cfg.Username != "" {
-				cloud := roborock.NewCloudClient(cfg.Username, cfg.ClientID, nil)
-				if cfg.BaseURL != "" {
-					cloud.SetBaseURL(cfg.BaseURL)
-				}
-				if rc.g.traceHTTP {
-					cloud.Trace = traceFn(rc)
-				}
+				cloud := rc.cloudClient(cfg)
 				if base, err := cloud.BaseURL(ctx); err != nil {
 					gateway["error"] = err.Error()
 					problems = append(problems, "login gateway unreachable: "+err.Error())

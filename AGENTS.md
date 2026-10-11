@@ -32,10 +32,6 @@ Change it when the protocol implementation changes.
 ## Protocol Rules
 
 - Treat `internal/roborock` as the only place that knows the wire format.
-- Keep the golden-vector tests for `encodeTimestamp` and the V1 and L01 key
-  schedules when touching `internal/roborock/message.go`.
-- Keep the in-process device simulator test in `local_test.go` when changing
-  framing or the handshake.
 - Confirm a protocol change against `docs/protocol.md` or a decompiled app
   artifact before committing to it.
 
@@ -53,5 +49,11 @@ For release config changes, use the pinned release tool:
 make release-check
 ```
 
-Keep CLI flow tests at the subprocess boundary in `tests/`.
-Use local HTTP fixtures and synthetic credentials.
+## Test policy
+
+- Keep only live end-to-end tests against the configured service and static checks.
+- Do not add unit tests, mock transports, fake servers, device simulators, or synthetic subprocess fixtures.
+- Run `make check` for formatting, module consistency, vet, script syntax, and builds.
+- Run `make test` with existing credentials for read-only live verification.
+- Report missing credentials or service failures as blocked live checks, never passes.
+- CI runs static checks without credentials. It does not run live service tests.

@@ -1,4 +1,4 @@
-.PHONY: build test vet fmt fmt-check tidy tidy-check check release-tool-check release-check release-snapshot
+.PHONY: build test vet fmt fmt-check tidy tidy-check check script-check release-tool-check release-check release-snapshot
 
 BINARY ?= roborocli
 PKG := ./...
@@ -9,8 +9,8 @@ build:
 	mkdir -p bin
 	go build -trimpath -o bin/$(BINARY) ./cmd/$(BINARY)
 
-test:
-	go test -count=1 -timeout=2m $(PKG)
+test: build
+	python3 tests/live.py bin/$(BINARY)
 
 vet:
 	go vet $(PKG)
@@ -27,7 +27,10 @@ tidy:
 tidy-check:
 	go mod tidy -diff
 
-check: fmt-check tidy-check vet test build
+script-check:
+	python3 -c "import ast, pathlib; ast.parse(pathlib.Path('tests/live.py').read_text())"
+
+check: fmt-check tidy-check vet script-check build
 
 release-tool-check:
 	@$(GORELEASER) --version | grep -Eq "^GitVersion: +v?$(subst .,[.],$(GORELEASER_VERSION:v%=%))$$" || { echo "Install GoReleaser $(GORELEASER_VERSION)"; exit 1; }

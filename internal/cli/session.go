@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"strings"
 	"time"
 
@@ -48,7 +49,7 @@ func (rc *runtime) loadConfig() (*config.Config, error) {
 
 // cloudClient builds a cloud client for the stored account.
 func (rc *runtime) cloudClient(cfg *config.Config) *roborock.CloudClient {
-	client := roborock.NewCloudClient(cfg.Username, cfg.ClientID, nil)
+	client := roborock.NewCloudClient(cfg.Username, cfg.ClientID, &http.Client{Timeout: rc.g.timeout})
 	if cfg.BaseURL != "" {
 		client.SetBaseURL(cfg.BaseURL)
 	}
