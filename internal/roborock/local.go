@@ -32,6 +32,7 @@ type LocalClient struct {
 	connNonce uint32
 	ackNonce  uint32
 	nextID    uint32
+	seq       uint32
 	pending   map[uint32]chan rpcResult
 	readErr   error
 	done      chan struct{}
@@ -48,6 +49,8 @@ func (c *LocalClient) Connect(ctx context.Context) error {
 	c.Timeout = orDuration(c.Timeout, 10*time.Second)
 	c.connNonce = uint32(RandomInt(10000, 32767))
 	c.nextID = uint32(RandomInt(10000, 32767))
+	// The device drops the connection when a request seq does not increase.
+	c.seq = uint32(RandomInt(100000, 999999))
 	c.pending = map[uint32]chan rpcResult{}
 	c.done = make(chan struct{})
 
@@ -268,8 +271,9 @@ func (c *LocalClient) Call(ctx context.Context, method string, params any) (json
 	}
 
 	c.mu.Lock()
-	c.nextID = uint32(RandomInt(10000, 32767))
-	id := c.nextID
+	c.nextID++
+	c.seq++
+	id, seq := c.nextID, c.seq
 	ch := make(chan rpcResult, 1)
 	c.pending[id] = ch
 	version := c.version
@@ -284,7 +288,7 @@ func (c *LocalClient) Call(ctx context.Context, method string, params any) (json
 
 	msg := &Message{
 		Version:   version,
-		Seq:       uint32(RandomInt(100000, 999999)),
+		Seq:       seq,
 		Random:    uint32(RandomInt(10000, 99999)),
 		Timestamp: nowTimestamp(),
 		Protocol:  ProtoGeneralRequest,
