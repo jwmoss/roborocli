@@ -101,11 +101,13 @@ func newDoctorCommand(rc *runtime) *cobra.Command {
 				}
 			} else {
 				rc.out.Table([]string{"CHECK", "RESULT"}, doctorRows(report))
+				if len(problems) == 0 {
+					rc.out.Success("all checks passed")
+				}
 			}
 			if len(problems) > 0 {
 				return fmt.Errorf("%d problem(s) found", len(problems))
 			}
-			rc.out.Success("all checks passed")
 			return nil
 		},
 	}

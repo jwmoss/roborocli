@@ -68,6 +68,7 @@ func main() {
 	var err error
 	binary, err = filepath.Abs(path)
 	require(err == nil, "cannot resolve CLI path")
+	require(string(read("doctor")["ok"]) == "true", "device diagnostics failed")
 	for _, transport := range []string{"default", "mqtt"} {
 		args := []string{"command", "get_status"}
 		if transport == "mqtt" {
