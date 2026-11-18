@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## [1.1.1] - 2026-11-17
+
+- Emit a single JSON document from a successful doctor check when using `--json`.
+
 ## [1.1.0] - 2026-10-10
 
 - Add detailed cleaning records with completion, interruption, source, and error evidence.
